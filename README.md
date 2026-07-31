@@ -41,3 +41,4 @@ Optimised for [Vercel](https://vercel.com/new) (zero-config for Next.js). Any No
 ---
 
 © 2026 Simcademy. Crash the simulator, not production.™
+# simcademy
