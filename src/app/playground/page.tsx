@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { SimulatorHub } from "@/sim/ui/SimulatorHub";
+import { Playground } from "@/sim/ui/Playground";
 
 export const metadata: Metadata = {
-  title: "Simulator Playground",
+  title: "Playground",
   description:
-    "One lab for every simulator: build an architecture and run real traffic through it, or open any concept's interactive visualization — CAP, saga, consistent hashing, rate limiting, and more.",
+    "Build a system-design architecture from components — services, caches, queues, load balancers, databases — send real traffic through it, and watch latency, throughput, and errors respond. Inject failures, add pods, and auto-scale.",
 };
 
 export default function PlaygroundPage() {
   return (
     <main className="mx-auto flex h-[calc(100dvh-3.25rem)] w-full max-w-[1500px] flex-col px-3 py-2">
       <div className="min-h-0 flex-1">
-        <SimulatorHub />
+        <Playground />
       </div>
     </main>
   );

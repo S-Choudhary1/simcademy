@@ -12,6 +12,7 @@ import { create } from "zustand";
 import { RequestSimEngine, type Blueprint, type ChaosKind, type SimSnapshot } from "./engine";
 import { componentDef, type StationConfig } from "./registry";
 import { evaluateAutoscale, resetAutoscale } from "./autoscale";
+import { supabase, shortId } from "@/lib/supabase";
 
 export interface SimNodeData extends Record<string, unknown> {
   componentType: string;
@@ -70,6 +71,10 @@ interface PlaygroundStore {
   spikeTraffic: () => void;
   serialize: () => string;
   loadSerialized: (encoded: string) => boolean;
+  /** Save the current design to Supabase; returns a short id, or null if unavailable. */
+  saveDesign: () => Promise<string | null>;
+  /** Load a shared design from Supabase by short id. */
+  loadFromCloud: (id: string) => Promise<boolean>;
 }
 
 export const usePlaygroundStore = create<PlaygroundStore>((set, get) => ({
@@ -260,6 +265,24 @@ export const usePlaygroundStore = create<PlaygroundStore>((set, get) => ({
     } catch {
       return "";
     }
+  },
+
+  saveDesign: async () => {
+    if (!supabase) return null;
+    const id = shortId();
+    const { error } = await supabase.from("designs").insert({ id, graph: get().serialize() });
+    if (error) {
+      console.error("saveDesign failed:", error.message);
+      return null;
+    }
+    return id;
+  },
+
+  loadFromCloud: async (id) => {
+    if (!supabase) return false;
+    const { data, error } = await supabase.from("designs").select("graph").eq("id", id).maybeSingle();
+    if (error || !data?.graph) return false;
+    return get().loadSerialized(data.graph as string);
   },
 
   loadSerialized: (encoded) => {

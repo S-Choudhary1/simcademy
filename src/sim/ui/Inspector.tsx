@@ -107,6 +107,13 @@ export function Inspector() {
           </button>
           <button
             type="button"
+            onClick={() => applyChaos(node.id, "flaky")}
+            className="rounded-md border border-yellow-500/40 bg-yellow-500/10 px-2 py-1.5 text-xs font-medium text-yellow-300 hover:bg-yellow-500/20"
+          >
+            Flaky ~25%
+          </button>
+          <button
+            type="button"
             onClick={() => applyChaos(node.id, "recover")}
             className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2 py-1.5 text-xs font-medium text-emerald-300 hover:bg-emerald-500/20"
           >

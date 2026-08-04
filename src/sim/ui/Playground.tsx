@@ -59,6 +59,7 @@ function PlaygroundInner({ blueprint, showPalette }: { blueprint: Blueprint; sho
   const running = usePlaygroundStore((s) => s.running);
   const loadBlueprint = usePlaygroundStore((s) => s.loadBlueprint);
   const loadSerialized = usePlaygroundStore((s) => s.loadSerialized);
+  const loadFromCloud = usePlaygroundStore((s) => s.loadFromCloud);
   const tick = usePlaygroundStore((s) => s.tick);
   const onNodesChange = usePlaygroundStore((s) => s.onNodesChange);
   const onEdgesChange = usePlaygroundStore((s) => s.onEdgesChange);
@@ -72,14 +73,20 @@ function PlaygroundInner({ blueprint, showPalette }: { blueprint: Blueprint; sho
   // toggle). Reading blueprintId via getState avoids re-running when the picker
   // switches blueprints without changing this prop.
   useEffect(() => {
-    const shared = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("s") : null;
+    const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const cloudId = params?.get("d");
+    const shared = params?.get("s");
     const state = usePlaygroundStore.getState();
+    if (cloudId) {
+      if (state.blueprintId !== "shared") loadFromCloud(cloudId); // async; sets state when it resolves
+      return;
+    }
     if (shared) {
       if (state.blueprintId !== "shared") loadSerialized(shared);
       return;
     }
     if (state.blueprintId !== blueprint.id) loadBlueprint(blueprint);
-  }, [blueprint, loadBlueprint, loadSerialized]);
+  }, [blueprint, loadBlueprint, loadSerialized, loadFromCloud]);
 
   // Animation loop — drives the store, not React state directly.
   useEffect(() => {

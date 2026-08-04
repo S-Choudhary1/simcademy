@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "./Logo";
+import { SearchPalette } from "./SearchPalette";
 
 const NAV = [
   { href: "/technologies", label: "Technologies" },
@@ -20,14 +21,14 @@ export function SiteHeader() {
         <Link href="/" aria-label="Simcademy home">
           <Logo />
         </Link>
-        <nav className="flex items-center gap-1 text-sm">
+        <nav className="flex items-center gap-1 overflow-x-auto text-sm">
           {NAV.map((n) => {
             const active = pathname === n.href || pathname.startsWith(`${n.href}/`);
             return (
               <Link
                 key={n.href}
                 href={n.href}
-                className={`rounded-md px-3 py-1.5 transition ${
+                className={`whitespace-nowrap rounded-md px-3 py-1.5 transition ${
                   active ? "bg-slate-800 text-slate-100" : "text-slate-400 hover:text-slate-200"
                 }`}
               >
@@ -36,6 +37,9 @@ export function SiteHeader() {
             );
           })}
         </nav>
+        <div className="ml-auto shrink-0">
+          <SearchPalette />
+        </div>
       </div>
     </header>
   );

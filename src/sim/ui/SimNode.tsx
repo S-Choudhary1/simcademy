@@ -34,6 +34,7 @@ export function SimNode({ id, selected, data }: NodeProps) {
   const failed = stat?.status === "failed";
   const slow = stat?.status === "slow";
   const partitioned = stat?.status === "partitioned";
+  const flaky = stat?.status === "flaky";
   const bottleneck = stat?.bottleneck ?? false;
 
   const border = selected
@@ -42,7 +43,9 @@ export function SimNode({ id, selected, data }: NodeProps) {
       ? "#f87171"
       : partitioned
         ? "#fb7185"
-        : slow
+        : flaky
+          ? "#eab308"
+          : slow
           ? "#fbbf24"
           : bottleneck
             ? "#fb923c"
@@ -107,6 +110,7 @@ export function SimNode({ id, selected, data }: NodeProps) {
             {dropped > 0 ? <span className="rounded bg-red-500/20 px-1 text-red-300">drop {dropped}</span> : null}
             {failed ? <span className="font-semibold text-red-400">DOWN</span> : null}
             {partitioned ? <span className="font-semibold text-rose-300">◫ loss</span> : null}
+            {flaky ? <span className="font-semibold text-yellow-300">⚡ flaky</span> : null}
           </span>
         </div>
       </div>

@@ -23,8 +23,10 @@ export function StatusBar({ showPicker = true }: { showPicker?: boolean }) {
   const loadBlueprint = usePlaygroundStore((s) => s.loadBlueprint);
   const spikeTraffic = usePlaygroundStore((s) => s.spikeTraffic);
   const serialize = usePlaygroundStore((s) => s.serialize);
+  const saveDesign = usePlaygroundStore((s) => s.saveDesign);
   const blueprintId = usePlaygroundStore((s) => s.blueprintId);
   const [copied, setCopied] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const maxBacklog = usePlaygroundStore((s) =>
     s.snapshot ? s.snapshot.nodes.reduce((m, n) => Math.max(m, n.backlog), 0) : 0,
   );
@@ -111,17 +113,23 @@ export function StatusBar({ showPicker = true }: { showPicker?: boolean }) {
         {showPicker ? (
           <button
             type="button"
-            onClick={() => {
-              const url = `${window.location.origin}/playground?s=${serialize()}`;
+            onClick={async () => {
+              setSharing(true);
+              const id = await saveDesign(); // short cloud link if Supabase is set up
+              const url = id
+                ? `${window.location.origin}/playground?d=${id}`
+                : `${window.location.origin}/playground?s=${serialize()}`; // fallback: encode in URL
               navigator.clipboard?.writeText(url);
+              setSharing(false);
               setCopied(true);
-              setTimeout(() => setCopied(false), 1500);
+              setTimeout(() => setCopied(false), 1800);
             }}
-            title="Copy a shareable link to this design"
+            disabled={sharing}
+            title="Save this design and copy a shareable link"
             data-tour="tour-share"
-            className="rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700"
+            className="rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700 disabled:opacity-60"
           >
-            {copied ? "Copied ✓" : "🔗 Share"}
+            {copied ? "Copied ✓" : sharing ? "Saving…" : "🔗 Share"}
           </button>
         ) : null}
       </div>

@@ -38,8 +38,8 @@ export interface Blueprint {
   edges: BlueprintEdge[];
 }
 
-export type ChaosKind = "kill" | "slow" | "partition" | "recover";
-export type NodeStatus = "healthy" | "failed" | "slow" | "partitioned";
+export type ChaosKind = "kill" | "slow" | "partition" | "flaky" | "recover";
+export type NodeStatus = "healthy" | "failed" | "slow" | "partitioned" | "flaky";
 
 export interface NodeSnapshot {
   id: string;
@@ -213,6 +213,9 @@ export class RequestSimEngine {
     } else if (kind === "partition") {
       s.status = "partitioned";
       s.lossRate = 0.5; // half of arrivals time out / are dropped
+    } else if (kind === "flaky") {
+      s.status = "flaky";
+      s.lossRate = 0.25; // intermittent: ~1 in 4 requests errors
     } else {
       s.status = "healthy";
       s.penaltyMs = 0;

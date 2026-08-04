@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { CONCEPTS } from "@/content/catalog";
+import { ConceptLab } from "@/concepts/ConceptLab";
 
 export const metadata: Metadata = {
   title: "Concepts",
@@ -17,6 +18,14 @@ export default function ConceptsIndex() {
           The ideas behind the systems — each with a purpose-built interactive visualization.
         </p>
       </header>
+
+      <section className="mb-10">
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-500">Concept playground</h2>
+        <p className="mb-3 text-sm text-slate-400">Run any concept&rsquo;s interactive simulator right here, then open its full lesson.</p>
+        <ConceptLab />
+      </section>
+
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">All concepts</h2>
       <div className="grid gap-3 sm:grid-cols-2">
         {CONCEPTS.map((c) => (
           <Link

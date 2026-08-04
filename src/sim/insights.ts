@@ -95,6 +95,17 @@ export function analyze(s: SimSnapshot): Insight[] {
       });
       continue;
     }
+    if (n.status === "flaky") {
+      out.push({
+        key: `flaky-${n.id}`,
+        severity: "warn",
+        icon: "⚡",
+        title: `${n.label} is flaky`,
+        reason: "it's dropping roughly a quarter of requests intermittently — the hardest kind of failure to spot, because it half-works",
+        fix: "add retries with backoff on the caller, a circuit breaker to fail fast when it degrades, and health checks to pull it from rotation",
+      });
+      continue;
+    }
     if (n.status === "slow") {
       out.push({
         key: `slow-${n.id}`,
