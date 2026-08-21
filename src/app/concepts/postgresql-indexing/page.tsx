@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { PostgresIndexViz } from "@/concepts/IndexExplorer";
+import { PostgresIndexWriteViz } from "@/concepts/IndexWriteViz";
 import { TopicMeme } from "@/components/memes";
 
 export const metadata: Metadata = {
@@ -63,6 +64,23 @@ export default function PostgresIndexingPage() {
           normal column with and without an index.
         </p>
         <PostgresIndexViz />
+      </Section>
+
+      <Section title="What a write does to the index">
+        <p>
+          Reads are only half the story. Every <code>INSERT</code> has to thread the new value into the B⁺-tree so it
+          stays sorted and balanced. The write <strong>descends</strong> to the correct leaf and drops the key in place;
+          if that leaf is already full it <strong>splits</strong>, copies a separator up to the parent, and — if the
+          parent fills too — the split can cascade all the way to the root, growing the tree one level taller.
+        </p>
+        <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">{`INSERT INTO users (email, city) VALUES ('zoe@acme.io', 'Rome');
+-- the row lands in the heap AND idx_users_email is updated in the same transaction`}</pre>
+        <PostgresIndexWriteViz />
+        <p>
+          This is why indexes make writes slower: each one is a second structure to maintain, and an unlucky insert can
+          trigger a chain of splits. The pay-off is that the tree stays shallow (height grows like <code>log(n)</code>),
+          so reads stay fast no matter how big the table gets.
+        </p>
       </Section>
 
       <Section title="How to read EXPLAIN">

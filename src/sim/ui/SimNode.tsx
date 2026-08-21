@@ -57,6 +57,8 @@ export function SimNode({ id, selected, data }: NodeProps) {
 
   return (
     <div className="relative w-[180px]">
+      {/* Pod stack: peek slightly UP (into empty space above the node) and a hair
+          right, so it reads as "N pods" without bleeding into neighbouring nodes. */}
       {Array.from({ length: layers }, (_, i) => (
         <div
           key={i}
@@ -65,8 +67,8 @@ export function SimNode({ id, selected, data }: NodeProps) {
           style={{
             background: "#0f172a",
             border: `1.5px solid ${selected ? "#38bdf8" : "#64748b"}`,
-            transform: `translate(${(i + 1) * 7}px, ${(i + 1) * 7}px)`,
-            opacity: failed ? 0.4 : 0.95 - i * 0.22,
+            transform: `translate(${(i + 1) * 3}px, -${(i + 1) * 5}px)`,
+            opacity: failed ? 0.4 : 0.9 - i * 0.22,
           }}
         />
       ))}

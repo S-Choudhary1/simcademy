@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { MongoIndexViz } from "@/concepts/IndexExplorer";
+import { MongoIndexWriteViz } from "@/concepts/IndexWriteViz";
 
 export const metadata: Metadata = {
   title: "MongoDB Indexing — Interactive Concept",
@@ -63,6 +64,24 @@ export default function MongoIndexingPage() {
           field with and without an index.
         </p>
         <MongoIndexViz />
+      </Section>
+
+      <Section title="What a write does to the index">
+        <p>
+          Reads are only half the story. Every <code>insertOne</code> has to thread the new value into the B⁺-tree so it
+          stays sorted and balanced. The write <strong>descends</strong> to the correct leaf and drops the key in place;
+          if that leaf is already full it <strong>splits</strong>, copies a separator up to the parent, and — if the
+          parent fills too — the split can cascade to the root, growing the tree one level taller. WiredTiger implements
+          exactly the same B⁺-tree split algorithm Postgres does.
+        </p>
+        <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">{`db.users.insertOne({ email: "zoe@acme.io", city: "Rome" })
+// the document is written AND the { email: 1 } index is updated`}</pre>
+        <MongoIndexWriteViz />
+        <p>
+          This is why indexes make writes slower: each one is a second structure to maintain, and an unlucky insert can
+          trigger a chain of splits. The pay-off is that the tree stays shallow (height grows like <code>log(n)</code>),
+          so an IXSCAN stays fast no matter how big the collection gets.
+        </p>
       </Section>
 
       <Section title="How to read explain()">

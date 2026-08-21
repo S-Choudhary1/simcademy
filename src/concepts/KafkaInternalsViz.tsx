@@ -6,6 +6,7 @@ import { GuidedTour, type TourStep } from "@/components/GuidedTour";
 const TOUR: TourStep[] = [
   { title: "Kafka internals", body: "Watch partitions, offsets, consumer groups, and rebalancing in one place. Here's how to drive it." },
   { target: "[data-tour='kafka-play']", title: "Run it", body: "Play/Pause. The producer appends records to partitions; each consumer group advances its own committed offset." },
+  { target: "[data-tour='kafka-produce']", title: "Keyed partitioning", body: "Type a key and Push — Kafka routes it by hash(key) % partitionCount. Send the same key twice and it always lands in the same partition; that's how per-key ordering works." },
   { target: "[data-tour='kafka-topic']", title: "Partitions & offsets", body: "Each row is an append-only log. The amber bar is produced records; each group column shows its committed offset and lag (records still to read)." },
   { target: "[data-tour='kafka-partitions']", title: "Add / remove partitions", body: "Partitions are the unit of parallelism. Add one for capacity; try removing one to see why Kafka can't shrink a live topic (it resets offsets)." },
   { target: "[data-tour='kafka-groups']", title: "Consumer groups", body: "Add a group and it reads the whole topic independently, at its own offset — that's how one event feeds many services." },
@@ -48,12 +49,27 @@ const ownedBy = (partition: number, consumers: number) => partition % consumers;
 const partitionsOf = (consumerIdx: number, consumers: number, nP: number) =>
   Array.from({ length: nP }, (_, i) => i).filter((i) => ownedBy(i, consumers) === consumerIdx);
 
+// Kafka's DefaultPartitioner: murmur-ish hash of the key, then % partitionCount.
+// Same key → same partition (until the partition count changes) → per-key order.
+function hashKey(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+const SAMPLE_KEYS = ["user-42", "user-42", "order-7", "cart-9", "user-3", "order-7"];
+
 export function KafkaInternalsViz() {
   const [heads, setHeads] = useState<number[]>(() => [0, 0, 0]);
   const [groups, setGroups] = useState<Group[]>(() => [{ name: "analytics", consumers: 2, committed: [0, 0, 0] }]);
   const [rate, setRate] = useState(6);
   const [running, setRunning] = useState(true);
   const [events, setEvents] = useState<string[]>([]);
+  const [eventKey, setEventKey] = useState("user-42");
+  const [alloc, setAlloc] = useState<{ key: string; hash: number; partition: number } | null>(null);
+  const [flash, setFlash] = useState<number | null>(null);
+  const sampleCursor = useRef(0);
+  const flashTimer = useRef<number | null>(null);
+  useEffect(() => () => { if (flashTimer.current) window.clearTimeout(flashTimer.current); }, []);
 
   const headsRef = useRef(heads);
   const groupsRef = useRef(groups);
@@ -111,6 +127,26 @@ export function KafkaInternalsViz() {
     pushEvent(`⚠ Kafka can't shrink a live topic. Recreated with ${np} partitions — every offset reset to 0 and key routing changed.`);
   };
 
+  const produceKeyed = (rawKey: string) => {
+    const key = rawKey.trim() || "(null)";
+    const p = heads.length;
+    // null key → round-robin; keyed → hash(key) % partitionCount (sticky per key).
+    const h = key === "(null)" ? 0 : hashKey(key);
+    const partition = key === "(null)" ? cursor.current % p : h % p;
+    const nextHeads = heads.slice();
+    nextHeads[partition] += 1;
+    setHeads(nextHeads);
+    if (key === "(null)") cursor.current += 1;
+    setAlloc({ key, hash: h, partition });
+    pushEvent(key === "(null)"
+      ? `Produced 1 record, no key → round-robin → landed in P${partition} at offset ${nextHeads[partition] - 1}.`
+      : `Produced key "${key}": hash=${h} → ${h} % ${p} = P${partition}, appended at offset ${nextHeads[partition] - 1}. Same key always lands here.`);
+    if (flashTimer.current) window.clearTimeout(flashTimer.current);
+    setFlash(partition);
+    flashTimer.current = window.setTimeout(() => setFlash(null), 800);
+  };
+  const pushSample = () => { produceKeyed(SAMPLE_KEYS[sampleCursor.current % SAMPLE_KEYS.length]); sampleCursor.current += 1; };
+
   const addGroup = () => {
     if (groups.length >= MAX_GROUPS) return;
     const spec = PALETTE[groups.length];
@@ -144,7 +180,10 @@ export function KafkaInternalsViz() {
     setGroups([{ name: "analytics", consumers: 2, committed: [0, 0, 0] }]);
     setRate(6);
     cursor.current = 0;
+    sampleCursor.current = 0;
     setEvents([]);
+    setAlloc(null);
+    setFlash(null);
   };
 
   const maxHead = Math.max(1, ...heads);
@@ -173,9 +212,39 @@ export function KafkaInternalsViz() {
         </label>
       </div>
 
+      {/* keyed producer: which partition does a key land in? hash(key) % N */}
+      <div className="mb-3 rounded-lg border border-slate-800 bg-slate-900/40 p-2.5" data-tour="kafka-produce">
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <span className="text-[11px] uppercase tracking-wide text-slate-500">Produce a record</span>
+          <label className="flex items-center gap-1.5 text-sm text-slate-300">
+            <span className="text-slate-500">key</span>
+            <input
+              value={eventKey}
+              onChange={(e) => setEventKey(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") produceKeyed(eventKey); }}
+              placeholder="(empty = no key)"
+              className="w-32 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-200 placeholder:text-slate-600"
+            />
+          </label>
+          <button type="button" onClick={() => produceKeyed(eventKey)} className="rounded-md bg-amber-500 px-3 py-1.5 text-sm font-semibold text-slate-950 hover:bg-amber-400">Push event →</button>
+          <button type="button" onClick={pushSample} className="rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-800">Push sample keys</button>
+        </div>
+        <div className="font-mono text-[12px] leading-relaxed text-slate-400">
+          {alloc ? (
+            <>
+              <span className="text-slate-200">partition = hash(&quot;{alloc.key}&quot;) % {heads.length}</span>{" "}
+              = <span className="text-amber-300">{alloc.hash} % {heads.length}</span>{" "}
+              = <span className="font-bold text-amber-300">P{alloc.partition}</span>
+            </>
+          ) : (
+            <span className="text-slate-600">Kafka routes each record by <span className="text-slate-400">hash(key) % partitionCount</span>. Same key → same partition → ordered per key.</span>
+          )}
+        </div>
+      </div>
+
       {/* topic: partitions × offsets, with each group's committed offset */}
       <div className="mb-1.5 text-[11px] uppercase tracking-wide text-slate-500">
-        Topic · {heads.length} partition{heads.length === 1 ? "" : "s"} — each row is an append-only log, offset grows left→right
+        Topic <span className="text-slate-400">orders</span> · {heads.length} partition{heads.length === 1 ? "" : "s"} — each row is an append-only log, offset grows left→right
       </div>
       <div className="overflow-x-auto" data-tour="kafka-topic">
         <table className="w-full min-w-[520px] border-separate border-spacing-y-1">
@@ -194,9 +263,9 @@ export function KafkaInternalsViz() {
           <tbody>
             {heads.map((head, i) => (
               <tr key={i}>
-                <td className="font-mono text-xs text-slate-400">P{i}</td>
+                <td className={`font-mono text-xs ${flash === i ? "font-bold text-amber-300" : "text-slate-400"}`}>P{i}</td>
                 <td className="pr-2">
-                  <div className="relative h-6 w-full overflow-visible rounded bg-slate-900 ring-1 ring-slate-800">
+                  <div className={`relative h-6 w-full overflow-visible rounded bg-slate-900 ring-1 transition-shadow ${flash === i ? "ring-2 ring-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" : "ring-slate-800"}`}>
                     <div className="absolute inset-y-0 left-0 rounded bg-amber-500/30" style={{ width: `${(head / maxHead) * 100}%` }} />
                     {groups.map((g, gi) => {
                       const c = g.committed[i];
