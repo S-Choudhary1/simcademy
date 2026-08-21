@@ -11,16 +11,23 @@ const TOUR: TourStep[] = [
   { target: "[data-tour='ch-vnodes']", title: "Virtual nodes", body: "Placing each server at several ring points (vnodes) balances the load and spreads a removed server's keys across many others instead of dumping them on one neighbour." },
 ];
 
-const CX = 160, CY = 160, R = 118;
+const CX = 160, CY = 160, R = 116, KR = 90; // R = server ring, KR = inner key ring
 const KEYS = Array.from({ length: 16 }, (_, i) => `key-${i}`);
 const COLORS = ["#38bdf8", "#34d399", "#f472b6", "#fbbf24", "#a78bfa", "#fb923c", "#22d3ee"];
 
 function hash(s: string): number {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  // murmur3 fmix32 finalizer so a single trailing-char change avalanches into
+  // the high bits — otherwise "key-0"…"key-15" clump into a couple of arcs.
+  h ^= h >>> 16; h = Math.imul(h, 2246822507);
+  h ^= h >>> 13; h = Math.imul(h, 3266489909);
+  h ^= h >>> 16;
   return h >>> 0;
 }
-const angleOf = (s: string) => hash(s) % 360;
+// Map the FULL 32-bit hash around the circle (not hash % 360, which folds away
+// the well-distributed high bits and clusters everything).
+const angleOf = (s: string) => (hash(s) / 4294967296) * 360;
 const pointFor = (deg: number, r = R) => {
   const rad = ((deg - 90) * Math.PI) / 180;
   return { x: CX + r * Math.cos(rad), y: CY + r * Math.sin(rad) };
@@ -68,6 +75,21 @@ export function ConsistentHashingViz() {
   const model = useMemo(() => assignFull(nodes, vnodes), [nodes, vnodes]);
   const colorFor = (name: string) => COLORS[nodes.indexOf(name) % COLORS.length];
 
+  // Keep angular positions honest (they decide ownership) but nudge keys that
+  // land within a few degrees onto inner radii, so none hide behind each other.
+  const keyLayout = useMemo(() => {
+    const sorted = KEYS.map((k) => ({ k, a: angleOf(k) })).sort((x, y) => x.a - y.a);
+    const lastAtLevel: number[] = [];
+    const out: Record<string, { a: number; r: number }> = {};
+    for (const it of sorted) {
+      let level = 0;
+      while (lastAtLevel[level] !== undefined && it.a - lastAtLevel[level] < 9) level++;
+      lastAtLevel[level] = it.a;
+      out[it.k] = { a: it.a, r: KR - level * 13 };
+    }
+    return out;
+  }, []);
+
   const runTrace = () => {
     clearT();
     setMsg(null); setMoved([]);
@@ -110,29 +132,43 @@ export function ConsistentHashingViz() {
       </p>
 
       <div className="grid gap-4 sm:grid-cols-[320px_1fr]">
-        <svg viewBox="0 0 320 320" className="mx-auto h-auto w-full max-w-[320px]" role="img" aria-label="Hash ring" data-tour="ch-ring">
-          <circle cx={CX} cy={CY} r={R} fill="none" stroke="#1e293b" strokeWidth={2} />
-          {trace ? <path d={arcPath(trace.from, trace.done ? trace.to : trace.angle)} fill="none" stroke={colorFor(trace.owner)} strokeWidth={3} strokeLinecap="round" opacity={0.75} /> : null}
+        <svg viewBox="0 0 320 320" className="mx-auto h-auto w-full max-w-[340px]" role="img" aria-label="Hash ring" data-tour="ch-ring">
+          {/* two guides: outer server ring, inner key ring */}
+          <circle cx={CX} cy={CY} r={R} fill="none" stroke="#334155" strokeWidth={2} />
+          <circle cx={CX} cy={CY} r={KR} fill="none" stroke="#1e293b" strokeWidth={1} strokeDasharray="3 4" />
 
+          {/* trace: arc walked along the server ring */}
+          {trace ? <path d={arcPath(trace.from, trace.done ? trace.to : trace.angle)} fill="none" stroke={colorFor(trace.owner)} strokeWidth={3.5} strokeLinecap="round" opacity={0.8} /> : null}
+          {/* radial connector from the traced key (inner) out to the ring */}
+          {trace ? (() => { const a = pointFor(trace.from, keyLayout[trace.key].r), b = pointFor(trace.from, R); return <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={colorFor(trace.owner)} strokeWidth={1.5} strokeDasharray="2 2" opacity={0.7} />; })() : null}
+
+          {/* keys — on the inner ring, coloured by owning server (dodged inward on collision) */}
           {KEYS.map((k) => {
-            const p = pointFor(angleOf(k));
+            const L = keyLayout[k];
+            const p = pointFor(L.a, L.r);
             const isTest = trace?.key === k;
             const isMoved = moved.includes(k);
-            return <circle key={k} cx={p.x} cy={p.y} r={isTest || isMoved ? 6 : 4} fill={colorFor(model.owner[k])} stroke={isTest ? "#fff" : isMoved ? "#fde047" : "none"} strokeWidth={isTest || isMoved ? 2 : 0} opacity={0.95} />;
+            return <circle key={k} cx={p.x} cy={p.y} r={isTest || isMoved ? 6.5 : 4.5} fill={colorFor(model.owner[k])} stroke={isTest ? "#fff" : isMoved ? "#fde047" : "#0b1220"} strokeWidth={isTest || isMoved ? 2.5 : 1} />;
           })}
 
+          {/* servers — larger labelled markers on the outer ring */}
           {model.ring.map((rp, i) => {
-            const p = pointFor(rp.a);
+            const p = pointFor(rp.a, R);
+            const on = trace?.done && trace.owner === rp.n && Math.abs(rp.a - trace.to) < 0.5;
             return (
               <g key={`${rp.n}#${i}`}>
-                <circle cx={p.x} cy={p.y} r={9} fill={colorFor(rp.n)} stroke="#0f172a" strokeWidth={2} />
-                <text x={p.x} y={p.y + 3.5} textAnchor="middle" fontSize={10} fontWeight={700} fill="#0b1220">{rp.n}</text>
+                <circle cx={p.x} cy={p.y} r={12} fill={colorFor(rp.n)} stroke={on ? "#fff" : "#0b1220"} strokeWidth={on ? 3 : 2.5} />
+                <text x={p.x} y={p.y + 4} textAnchor="middle" fontSize={12} fontWeight={800} fill="#0b1220">{rp.n}</text>
               </g>
             );
           })}
 
-          {trace && trace.done ? (() => { const p = pointFor(trace.to); return <circle cx={p.x} cy={p.y} r={14} fill="none" stroke={colorFor(trace.owner)} strokeWidth={2} opacity={0.6} />; })() : null}
-          {trace && !trace.done ? (() => { const p = pointFor(trace.angle); return <circle cx={p.x} cy={p.y} r={5} fill="#fff" stroke={colorFor(trace.owner)} strokeWidth={2} />; })() : null}
+          {/* travelling trace marker */}
+          {trace && !trace.done ? (() => { const p = pointFor(trace.angle, R); return <circle cx={p.x} cy={p.y} r={6} fill="#fff" stroke={colorFor(trace.owner)} strokeWidth={2.5} />; })() : null}
+
+          {/* centre caption */}
+          <text x={CX} y={CY - 4} textAnchor="middle" fontSize={11} fontWeight={700} fill="#64748b">hash ring</text>
+          <text x={CX} y={CY + 12} textAnchor="middle" fontSize={9} fill="#475569">● key · ⬤ server</text>
         </svg>
 
         <div>
