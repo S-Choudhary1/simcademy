@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -16,14 +17,37 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://simcademy.app"),
+
   title: {
     default: "Simcademy — Learn System Design by Doing",
     template: "%s | Simcademy",
   },
+
   description:
     "Simcademy is an interactive academy for system design: learn distributed systems, databases, and backend engineering through browser-based simulations. See how production systems work — explore, modify, and break them safely.",
-  keywords: ["system design", "learn system design", "distributed systems", "backend engineering", "interactive simulator", "system design playground", "Simcademy"],
-  openGraph: { title: "Simcademy — Learn System Design by Doing", description: "An interactive academy for system design. Explore, modify, and break real systems safely.", siteName: "Simcademy", type: "website" },
+
+  keywords: [
+    "system design",
+    "learn system design",
+    "distributed systems",
+    "backend engineering",
+    "interactive simulator",
+    "system design playground",
+    "Simcademy",
+  ],
+
+  openGraph: {
+    title: "Simcademy — Learn System Design by Doing",
+    description:
+      "An interactive academy for system design. Explore, modify, and break real systems safely.",
+    siteName: "Simcademy",
+    type: "website",
+  },
+
+  // Google Search Console verification
+  verification: {
+    google: "W2TwZKcGMYRjzmErX8X1L2JJVOEY6L9szQCRQvxVsV4",
+  },
 };
 
 export default function RootLayout({
