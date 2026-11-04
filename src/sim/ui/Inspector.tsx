@@ -11,10 +11,13 @@ export function Inspector() {
   const setNodeConfig = usePlaygroundStore((s) => s.setNodeConfig);
   const applyChaos = usePlaygroundStore((s) => s.applyChaos);
   const deleteSelected = usePlaygroundStore((s) => s.deleteSelected);
+  const select = usePlaygroundStore((s) => s.select);
 
   if (!selectedId || !node) {
+    // Nothing selected: on mobile, take up no space at all so the canvas gets the full
+    // screen; on desktop, keep the persistent "nothing selected yet" sidebar.
     return (
-      <aside className="flex w-72 shrink-0 flex-col border-l border-slate-800 bg-slate-950/60 p-4" data-tour="tour-inspector">
+      <aside className="hidden w-72 shrink-0 flex-col border-l border-slate-800 bg-slate-950/60 p-4 md:flex" data-tour="tour-inspector">
         <h2 className="text-sm font-semibold text-slate-200">Inspector</h2>
         <p className="mt-6 text-center text-xs text-slate-500">
           Select a component to edit its properties, view live stats, and inject failures.
@@ -27,14 +30,28 @@ export function Inspector() {
   const cfg = { ...(def?.defaults ?? ({} as StationConfig)), ...node.data.config };
 
   return (
-    <aside className="flex w-72 shrink-0 flex-col gap-4 overflow-y-auto border-l border-slate-800 bg-slate-950/60 p-4" data-tour="tour-inspector">
-      <div className="flex items-center gap-2">
-        <span className="text-xl">{def?.icon}</span>
-        <div>
-          <div className="text-sm font-semibold text-slate-100">{node.data.label}</div>
-          <div className="text-[11px] uppercase tracking-wide text-slate-500">{def?.label}</div>
+    <>
+      {/* Mobile-only backdrop so the sheet reads as an overlay, and tapping outside closes it. */}
+      <div className="fixed inset-0 z-20 bg-slate-950/60 md:hidden" onClick={() => select(null)} />
+      <aside
+        className="fixed inset-x-0 bottom-0 z-30 flex max-h-[70vh] flex-col gap-4 overflow-y-auto rounded-t-2xl border border-slate-800 bg-slate-950 p-4 shadow-2xl md:static md:z-auto md:max-h-none md:w-72 md:shrink-0 md:rounded-none md:border-0 md:border-l md:bg-slate-950/60 md:shadow-none"
+        data-tour="tour-inspector"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-xl">{def?.icon}</span>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-semibold text-slate-100">{node.data.label}</div>
+            <div className="text-[11px] uppercase tracking-wide text-slate-500">{def?.label}</div>
+          </div>
+          <button
+            type="button"
+            onClick={() => select(null)}
+            aria-label="Close inspector"
+            className="shrink-0 rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800 hover:text-slate-200 md:hidden"
+          >
+            ✕
+          </button>
         </div>
-      </div>
 
       {def?.description ? <p className="text-[12px] leading-snug text-slate-400">{def.description}</p> : null}
 
@@ -122,14 +139,15 @@ export function Inspector() {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={deleteSelected}
-        className="mt-auto rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-400 hover:border-red-500/50 hover:text-red-300"
-      >
-        Delete component
-      </button>
-    </aside>
+        <button
+          type="button"
+          onClick={deleteSelected}
+          className="mt-auto rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-400 hover:border-red-500/50 hover:text-red-300"
+        >
+          Delete component
+        </button>
+      </aside>
+    </>
   );
 }
 

@@ -65,7 +65,7 @@ export default function RedisPage() {
       </nav>
 
       <header className="mb-8">
-        <div className="mb-2 flex items-center gap-2">
+        <div className="mb-2 flex flex-wrap items-center gap-2">
           <span className="rounded-full bg-sky-500/15 px-2.5 py-0.5 text-xs font-medium text-sky-300">
             Technology
           </span>

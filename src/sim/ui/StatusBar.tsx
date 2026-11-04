@@ -59,7 +59,7 @@ export function StatusBar({ showPicker = true }: { showPicker?: boolean }) {
         </select>
       ) : null}
 
-      <div className="flex items-center gap-2" data-tour="tour-transport">
+      <div className="flex flex-wrap items-center gap-2" data-tour="tour-transport">
         <button
           type="button"
           onClick={toggle}
@@ -150,7 +150,7 @@ export function StatusBar({ showPicker = true }: { showPicker?: boolean }) {
         </label>
       ) : null}
 
-      <div className="ml-auto flex items-center gap-x-4 gap-y-1" data-tour="tour-metrics">
+      <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1" data-tour="tour-metrics">
         <Metric label="RPS" value={metrics ? `${metrics.throughput}` : "0"} />
         <Metric label="p50" value={metrics ? `${metrics.p50}ms` : "—"} />
         <Metric label="p95" value={metrics ? `${metrics.p95}ms` : "—"} />

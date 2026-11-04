@@ -21,7 +21,7 @@ export function Palette() {
   })).filter((g) => g.items.length > 0);
 
   return (
-    <aside className="flex w-56 shrink-0 flex-col gap-4 overflow-y-auto border-r border-slate-800 bg-slate-950/60 p-3" data-tour="tour-palette">
+    <aside className="hidden w-56 shrink-0 flex-col gap-4 overflow-y-auto border-r border-slate-800 bg-slate-950/60 p-3 md:flex" data-tour="tour-palette">
       <div>
         <h2 className="text-sm font-semibold text-slate-200">Components</h2>
         <p className="mt-0.5 text-[11px] text-slate-500">Drag onto the canvas to build.</p>

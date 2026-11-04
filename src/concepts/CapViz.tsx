@@ -92,23 +92,25 @@ export function CapViz() {
   return (
     <div className="not-prose rounded-xl border border-slate-800 bg-slate-950/60 p-4">
       {/* client + two replicas + travelling packet */}
-      <div className="relative" data-tour="cap-nodes">
-        <div className="flex items-center justify-between gap-2">
-          <NodeCard label="Client" value={null} accent="violet" note="reads & writes" />
-          <span className="text-slate-600">→</span>
-          <NodeCard label="Node A" value={valueA} accent="sky" note="write here" />
-          <div className="flex flex-col items-center px-1">
-            <span className={`text-xl ${partitioned ? "text-red-400" : "text-emerald-400"}`}>{partitioned ? "✂" : "↔"}</span>
-            <span className={`text-[10px] ${partitioned ? "text-red-400" : "text-slate-500"}`}>{partitioned ? "partitioned" : "replicating"}</span>
+      <div className="overflow-x-auto">
+        <div className="relative min-w-[460px]" data-tour="cap-nodes">
+          <div className="flex items-center justify-between gap-2">
+            <NodeCard label="Client" value={null} accent="violet" note="reads & writes" />
+            <span className="text-slate-600">→</span>
+            <NodeCard label="Node A" value={valueA} accent="sky" note="write here" />
+            <div className="flex flex-col items-center px-1">
+              <span className={`text-xl ${partitioned ? "text-red-400" : "text-emerald-400"}`}>{partitioned ? "✂" : "↔"}</span>
+              <span className={`text-[10px] ${partitioned ? "text-red-400" : "text-slate-500"}`}>{partitioned ? "partitioned" : "replicating"}</span>
+            </div>
+            <NodeCard label="Node B" value={valueB} accent={diverged && partitioned ? "amber" : "sky"} note="read here" />
           </div>
-          <NodeCard label="Node B" value={valueB} accent={diverged && partitioned ? "amber" : "sky"} note="read here" />
+          {packet ? (
+            <div
+              className="pointer-events-none absolute top-1/2 z-10 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-lg transition-[left] duration-500 ease-in-out"
+              style={{ left: `${packet.x}%`, background: packet.tone === "fail" ? "#f87171" : packet.tone === "read" ? "#34d399" : "#38bdf8", boxShadow: "0 0 8px currentColor" }}
+            />
+          ) : null}
         </div>
-        {packet ? (
-          <div
-            className="pointer-events-none absolute top-1/2 z-10 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-lg transition-[left] duration-500 ease-in-out"
-            style={{ left: `${packet.x}%`, background: packet.tone === "fail" ? "#f87171" : packet.tone === "read" ? "#34d399" : "#38bdf8", boxShadow: "0 0 8px currentColor" }}
-          />
-        ) : null}
       </div>
 
       <div className={`mt-3 rounded-lg border px-3 py-2 text-center text-sm ${banner.cls}`}>{banner.text}</div>

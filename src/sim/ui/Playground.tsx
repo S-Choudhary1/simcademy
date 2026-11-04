@@ -131,6 +131,12 @@ function PlaygroundInner({ blueprint, showPalette }: { blueprint: Blueprint; sho
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
       <StatusBar showPicker={showPalette} />
+      {showPalette ? (
+        <p className="border-b border-slate-800 bg-slate-900/60 px-3 py-1.5 text-[11px] text-slate-500 md:hidden">
+          💡 Dragging components onto the canvas works best on a larger screen — on mobile, load a ready-made design
+          from the dropdown above and tap any node to tune it.
+        </p>
+      ) : null}
       <div className="flex min-h-0 flex-1">
         {showPalette ? <Palette /> : null}
         <div className="relative min-w-0 flex-1" onDrop={onDrop} onDragOver={onDragOver} data-tour="tour-canvas">
