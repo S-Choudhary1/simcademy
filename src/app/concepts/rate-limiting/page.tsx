@@ -42,34 +42,47 @@ export default function RateLimitingPage() {
 
       <Section title="Definition">
         <p>
-          A rate limiter caps the request rate a client (or the whole system) is allowed, rejecting the excess —
-          usually with HTTP <code>429 Too Many Requests</code>. It protects services from overload, abuse, and runaway
-          costs. The interesting part is <em>how</em> the limit is enforced: the algorithm decides how bursts are
-          treated.
+          A rate limiter caps how many requests a client — or the whole system — is allowed to make in a given
+          stretch of time, and rejects anything over that, usually with an HTTP{" "}
+          <code>429 Too Many Requests</code> response. It protects a service from being overloaded, abused, or
+          running up a huge bill from a runaway client. The interesting part is <em>how</em> the limit gets enforced —
+          the algorithm decides whether a sudden burst of requests gets let through or cut off.
+        </p>
+      </Section>
+
+      <Section title="Analogy">
+        <p>
+          A nightclub doorman who only lets people in at a certain pace, no matter how big the crowd outside gets.
+          Some doormen let a small group in all at once if nobody&rsquo;s come in for a while (a burst) — others
+          insist on a strict, steady trickle no matter what. The five algorithms below are just different doorman
+          policies.
         </p>
       </Section>
 
       <Section title="The algorithms">
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
-            <strong>Token Bucket</strong> — tokens refill at a steady rate up to a bucket size; a request spends a
-            token. A full bucket absorbs a burst. Most common for public APIs.
+            <strong>Token Bucket</strong> — tokens refill at a steady rate, up to a maximum bucket size. Every
+            request spends one token. If the bucket is full, it can absorb a sudden burst all at once. The most
+            common choice for public APIs.
           </li>
           <li>
-            <strong>Leaky Bucket</strong> — arrivals join a queue that drains at a constant rate, smoothing spiky
-            traffic into a steady output. Overflow is dropped.
+            <strong>Leaky Bucket</strong> — incoming requests join a queue that drains at a constant rate, turning
+            bursty traffic into a smooth, steady stream. Anything that doesn&rsquo;t fit in the queue is dropped.
           </li>
           <li>
-            <strong>Fixed Window</strong> — a counter per fixed interval (e.g. per minute) that resets each window.
-            Simple, but two back-to-back windows can allow a 2× burst at the boundary.
+            <strong>Fixed Window</strong> — a simple counter for each time slot (e.g. &ldquo;this minute&rdquo;),
+            reset at the start of the next slot. Easy to build, but two slots back-to-back can let through up to
+            double the intended burst right at the boundary.
           </li>
           <li>
-            <strong>Sliding Window (counter)</strong> — weights the previous window&rsquo;s count to smooth out the
-            fixed-window edge burst, without storing every request timestamp. An O(1)-memory approximation.
+            <strong>Sliding Window (counter)</strong> — a smarter fixed window: it blends in part of the previous
+            window&rsquo;s count to smooth out that boundary burst, without remembering every single request. Cheap,
+            constant-memory, and an approximation rather than exact.
           </li>
           <li>
-            <strong>Sliding Window (log)</strong> — keeps a timestamp for every admitted request in the last window and
-            counts exactly how many fall inside it. Precise, but O(N) memory per client.
+            <strong>Sliding Window (log)</strong> — keeps an exact timestamp for every request in the last window, so
+            the count is always exact. Accurate, but memory grows with how many requests each client can make.
           </li>
         </ul>
       </Section>
@@ -94,8 +107,20 @@ export default function RateLimitingPage() {
         </ul>
       </Section>
 
+      <Section title="Where it&rsquo;s used">
+        <p>
+          Public APIs (Stripe, GitHub, Twitter) use it so one noisy user can&rsquo;t drown out everyone else. API
+          gateways and CDNs (Cloudflare, AWS API Gateway, nginx) apply it at the edge, before traffic even reaches
+          your own servers.
+        </p>
+      </Section>
+
       <Section title="How to implement">
-        <p>For a single process, an in-memory token bucket is enough. For a cluster, keep the state in Redis so all nodes share one limit:</p>
+        <p>
+          For a single process, an in-memory token bucket is enough — there&rsquo;s no shared state to worry about.
+          For a cluster of servers, everyone needs to agree on one shared count, which usually means keeping the
+          state in Redis:
+        </p>
         <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">
 {`# Fixed window, keyed per user (atomic-ish):
 count = INCR  rate:{user}:{minute}
@@ -106,24 +131,24 @@ if count > LIMIT: return 429 (Retry-After: ...)
 # read-modify-write is atomic on the Redis server.`}
         </pre>
         <ul className="list-disc space-y-1 pl-5">
-          <li>Key by user, IP, or API key; return <code>429</code> with a <code>Retry-After</code> header.</li>
-          <li>Do it at the edge (gateway/CDN) so junk traffic never reaches your services.</li>
+          <li>Key the counter by user, IP, or API key, and return <code>429</code> with a <code>Retry-After</code> header so clients know when to try again.</li>
+          <li>Enforce it at the edge (gateway/CDN) so excess traffic never even reaches your own services.</li>
         </ul>
       </Section>
 
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Per-node limiting is simple but lets N nodes together allow N× the limit; global limiting needs shared state (Redis) → extra latency and a dependency.</li>
-          <li>Algorithm choice trades burst tolerance (token bucket) against smoothness (leaky/sliding window).</li>
-          <li>Set limits too tight and you reject legitimate bursts; too loose and you don&rsquo;t protect the backend.</li>
+          <li>Limiting per-server is simple, but N servers each enforcing the same limit independently effectively allows N× the intended total — real global limiting needs shared state (like Redis), which adds latency and a dependency.</li>
+          <li>Algorithm choice is a trade-off between tolerating bursts (token bucket) and keeping traffic smooth and steady (leaky bucket, sliding window).</li>
+          <li>Set the limit too tight and you reject real users during normal bursts; too loose and it stops protecting the backend at all.</li>
         </ul>
       </Section>
 
       <Section title="Common mistakes">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Fixed windows allowing double the intended burst at the boundary.</li>
-          <li>Limiting per-server instead of globally (distributed limiting needs shared state, e.g. Redis).</li>
-          <li>No <code>Retry-After</code> header, so clients hammer immediately after a 429.</li>
+          <li>Using a fixed window and not realizing two back-to-back windows can let through double the intended burst.</li>
+          <li>Limiting per-server instead of globally — distributed limiting needs shared state, usually Redis.</li>
+          <li>Skipping the <code>Retry-After</code> header, so rejected clients immediately retry instead of backing off.</li>
         </ul>
       </Section>
 

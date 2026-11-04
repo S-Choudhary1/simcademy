@@ -52,24 +52,36 @@ export default function RestGrpcGraphqlPage() {
 
       <H2 id="grpc">gRPC — contracts for services</H2>
       <P>
-        gRPC starts from a <strong>Protobuf contract</strong>: you declare messages and methods, and it generates typed
-        client and server code in every language. Calls travel as compact binary over HTTP/2, with streaming and
-        multiplexing built in. That makes it excellent for <A href="/concepts/consistent-hashing">internal</A>{" "}
-        service-to-service traffic where latency and strict typing matter. The cost: it&rsquo;s not natively
-        browser-friendly (needs a proxy), the binary payloads aren&rsquo;t human-readable, and the contract is another
-        artifact to version.
+        gRPC starts from a <strong>Protobuf contract</strong> — a <code>.proto</code> file where you write down every
+        message and method up front. From that one file, it generates matching client and server code in whatever
+        languages your services use, so both sides agree on the exact shape of every call before you write a line of
+        logic. Calls travel as compact binary (not readable text like JSON) over <strong>HTTP/2</strong>, which also
+        lets multiple calls share one connection and stream data both ways. That combination makes gRPC excellent for{" "}
+        internal service-to-service traffic, where low latency and a strict, enforced contract matter more than being
+        human-readable. The cost: it&rsquo;s not natively browser-friendly (a browser needs a proxy like{" "}
+        <strong>grpc-web</strong> in front of it), the binary payloads can&rsquo;t be eyeballed with <code>curl</code>,
+        and the <code>.proto</code> contract is one more artifact every team has to keep in sync.
       </P>
 
       <PullQuote>REST is a postcard anyone can read. gRPC is a sealed, typed envelope between machines that already agreed on the format.</PullQuote>
 
       <H2 id="graphql">GraphQL — the client&rsquo;s query language</H2>
       <P>
-        GraphQL exposes a single endpoint and a typed graph of your data; the client sends a query for exactly the
-        fields it wants and gets them in one response. That kills over- and under-fetching and is a gift for complex
-        frontends aggregating many sources (a classic <strong>backend-for-frontend</strong>). The costs are real:
-        caching is harder (it&rsquo;s usually one <code>POST</code>), a naive resolver triggers the{" "}
-        <strong>N+1 query</strong> problem, and a permissive query can be expensive — you need depth limits and
-        dataloaders.
+        Instead of many URLs, GraphQL exposes one endpoint and a typed &ldquo;graph&rdquo; describing every field you
+        could ask for. The client sends a query listing exactly the fields it wants, across as many related objects
+        as it needs, and gets them back in a single response — no extra round trips, no unused fields. That&rsquo;s
+        why it&rsquo;s popular for complex frontends that pull data from many sources behind one API, often called a{" "}
+        <strong>backend-for-frontend (BFF)</strong>.
+      </P>
+      <P>
+        The costs are real, though. Caching is harder, because almost every request is the same <code>POST</code> to
+        the same URL, so the simple &ldquo;cache by URL&rdquo; trick HTTP gives REST for free doesn&rsquo;t apply.
+        Each field is served by a small function called a <strong>resolver</strong>; if you write a naive resolver
+        for, say, &ldquo;each post&rsquo;s author,&rdquo; it can fire one database query to fetch the list of posts
+        and then one <em>more</em> query per post to fetch its author — the classic <strong>N+1 query</strong>{" "}
+        problem (1 list query + N follow-up queries). And because the client chooses the shape of the query, an
+        overly deep or broad one can be very expensive to run — teams guard against that with query depth limits and
+        batching tools (&ldquo;dataloaders&rdquo;) that collapse those N follow-up queries back into one.
       </P>
 
       <H2 id="matrix">Side by side</H2>

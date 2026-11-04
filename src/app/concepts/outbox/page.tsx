@@ -41,8 +41,8 @@ export default function OutboxPage() {
 
       <Section title="The problem: dual writes">
         <p>
-          A service method often needs to do two things: <strong>write to its database</strong> and{" "}
-          <strong>publish an event</strong> (so other services react). The tempting code is:
+          A service often needs to do two separate things at once: save something to its own database, and tell
+          other services about it by publishing an event. The tempting code looks like this:
         </p>
         <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">
 {`function createOrder(order) {
@@ -51,59 +51,67 @@ export default function OutboxPage() {
 }`}
         </pre>
         <p>
-          These are <strong>two separate systems</strong> and there is no shared transaction. If the service crashes
-          after the DB write but before the publish — or the broker is down — the order exists but no one is ever told.
-          Publish first instead and you can emit an event for an order that never saved. This is the{" "}
-          <strong>dual-write problem</strong>, and no amount of ordering or retries fully fixes it.
+          The database and the message broker are <strong>two separate systems</strong>, and there&rsquo;s no shared
+          transaction covering both. If the service crashes after the database write but before the publish — or the
+          broker is briefly down — the order exists, but no one downstream is ever told. Publish first instead, and
+          you risk the opposite: announcing an order that never actually got saved. Retrying doesn&rsquo;t fix it
+          either, because retrying whichever one already succeeded just duplicates it. This is the{" "}
+          <strong>dual-write problem</strong>, and no amount of clever ordering fully solves it on its own.
         </p>
       </Section>
 
       <Section title="The fix: an outbox in the same transaction">
         <p>
-          Write the event into an <strong>outbox table in the same database transaction</strong> as the business data.
-          Now the order and the &ldquo;intent to publish&rdquo; commit together — atomically. A separate{" "}
-          <strong>relay</strong> (a poller, or change-data-capture on the DB log) reads unsent outbox rows, publishes
-          them to the broker, and marks them sent. Delivery is decoupled from the transaction and can be retried
-          safely.
+          Write the event into an <strong>outbox table</strong>, inside the very same database transaction as the
+          business data. Now the order row and the &ldquo;please publish this&rdquo; row either both get saved or
+          neither does — the database guarantees that for you. A separate <strong>relay</strong> process then reads
+          the not-yet-sent rows out of the outbox table, publishes each one to the broker, and marks it sent. That
+          relay can be a simple poller that checks the table every few seconds, or a change-data-capture (CDC) tool
+          like Debezium that watches the database&rsquo;s own write-ahead log — its internal record of every change —
+          directly. Either way, publishing is now decoupled from the original transaction and can be retried safely
+          without touching the business data again.
         </p>
       </Section>
 
       <Section title="Try it — inject a failure at every point">
         <p>
           Switch between <strong>Naive dual-write</strong> and <strong>Transactional Outbox</strong>, pick a failure
-          scenario, and press Run. Watch where each one ends up consistent — and where the naive version silently
-          loses events.
+          scenario, and press Run. Watch where each approach ends up consistent — and where the naive version
+          silently loses an event.
         </p>
         <OutboxViz />
       </Section>
 
       <Section title="What the failures teach">
         <ul className="list-disc space-y-1 pl-5">
-          <li><strong>Naive, crash after DB:</strong> order saved, event lost — permanent inconsistency.</li>
-          <li><strong>Outbox, transaction fails:</strong> nothing saved, nothing promised — atomic, still consistent.</li>
-          <li><strong>Outbox, broker down:</strong> the row waits as PENDING; the relay retries until it&rsquo;s delivered.</li>
-          <li><strong>Outbox, relay crashes after publishing:</strong> it republishes on restart — a duplicate, never a loss.</li>
+          <li><strong>Naive, crash after DB write:</strong> the order is saved, but the event is lost — a permanent inconsistency.</li>
+          <li><strong>Outbox, transaction fails:</strong> nothing is saved and nothing is promised — the transaction keeps both sides consistent.</li>
+          <li><strong>Outbox, broker down:</strong> the row sits as PENDING; the relay just keeps retrying until it gets delivered.</li>
+          <li><strong>Outbox, relay crashes right after publishing:</strong> it republishes on restart — that&rsquo;s a duplicate, never a loss.</li>
         </ul>
         <p>
-          So the outbox gives <strong>at-least-once</strong> delivery: never lost, occasionally duplicated. That is why
-          consumers must be <strong>idempotent</strong> (dedupe by event id).
+          So the outbox gives you <strong>at-least-once</strong> delivery: events are never lost, but they can
+          occasionally arrive twice. That&rsquo;s why consumers reading from it must be{" "}
+          <strong>idempotent</strong> — they should dedupe by event id.
         </p>
       </Section>
 
       <Section title="Analogy">
         <p>
-          Certified mail with a logbook. Instead of &ldquo;file the document, then separately hope the letter is sent,&rdquo;
-          you record &ldquo;letter to send&rdquo; in the same logbook entry as the filing. A courier later works the
-          logbook and marks each letter delivered — retrying any that bounced. Nothing filed is ever left un-sent.
+          Certified mail with a logbook. Instead of &ldquo;file the document, then separately hope the letter gets
+          sent,&rdquo; you record &ldquo;letter to send&rdquo; in the very same logbook entry as the filing. A courier
+          later works through the logbook and marks each letter delivered, retrying any that bounced. Nothing that
+          was ever filed is left permanently un-sent.
         </p>
       </Section>
 
       <Section title="Where it&rsquo;s used">
         <p>
-          Event-driven microservices and, especially, every step of a{" "}
-          <Link href="/concepts/saga" className="text-sky-400 hover:text-sky-300">Saga</Link>: each local transaction uses
-          an outbox to reliably emit the event that triggers the next step, so the saga never stalls on a lost message.
-          Implemented via polling relays or CDC tools like Debezium reading the database log.
+          Event-driven microservices in general, and especially every step of a{" "}
+          <Link href="/concepts/saga" className="text-sky-400 hover:text-sky-300">Saga</Link>: each local transaction
+          uses an outbox to reliably emit the event that triggers the next step, so the saga never stalls because a
+          message got dropped. Implemented either with polling relays or CDC tools like Debezium reading the
+          database&rsquo;s change log.
         </p>
       </Section>
 
@@ -119,28 +127,28 @@ COMMIT;
 -- Relay (separate process):
 --   poll: SELECT * FROM outbox WHERE sent = false ORDER BY id;
 --   publish each to the broker, then UPDATE ... SET sent = true;
---   (or use CDC — Debezium reading the WAL — instead of polling)`}
+--   (or use CDC — e.g. Debezium reading the write-ahead log — instead of polling)`}
         </pre>
         <ul className="list-disc space-y-1 pl-5">
-          <li>Consumers dedupe by event id (the delivery is at-least-once).</li>
-          <li>Prune or archive rows once <code>sent = true</code>.</li>
+          <li>Consumers must dedupe by event id, since delivery out of the outbox is at-least-once, not exactly-once.</li>
+          <li>Prune or archive rows once <code>sent = true</code> so the table doesn&rsquo;t grow forever.</li>
         </ul>
       </Section>
 
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Atomic with your data and never-lost events vs an extra table and a relay to operate.</li>
-          <li>Guaranteed duplicates on failure — consumers must be idempotent.</li>
-          <li>Polling adds latency and DB load; CDC (Debezium) cuts latency but adds infrastructure.</li>
+          <li>Atomic with your data and events that are never silently lost, at the cost of an extra table and a relay process to run.</li>
+          <li>Duplicates are guaranteed to happen eventually, so consumers must be idempotent — this isn&rsquo;t optional.</li>
+          <li>Polling adds a little latency and extra load on the database; CDC cuts that latency but adds its own piece of infrastructure to run and monitor.</li>
         </ul>
       </Section>
 
       <Section title="Common mistakes">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Publishing inside the transaction (a broker call can&rsquo;t be rolled back) — write to the outbox instead.</li>
-          <li>Non-idempotent consumers, so the inevitable duplicate causes double side-effects.</li>
-          <li>Forgetting to prune the outbox table — it grows forever without cleanup.</li>
-          <li>Assuming the relay gives exactly-once. It&rsquo;s at-least-once; dedupe on the consumer.</li>
+          <li>Publishing straight to the broker from inside the transaction — a broker call can&rsquo;t be rolled back if the transaction later fails. Write to the outbox instead.</li>
+          <li>Writing consumers that aren&rsquo;t idempotent, so the inevitable duplicate delivery causes a double side-effect.</li>
+          <li>Forgetting to prune the outbox table — left unchecked, it grows forever.</li>
+          <li>Assuming the relay gives exactly-once delivery. It gives at-least-once; the consumer is responsible for deduping.</li>
         </ul>
       </Section>
 
@@ -149,7 +157,7 @@ COMMIT;
           <Link href="/concepts/acid" className="rounded-md bg-slate-800 px-2.5 py-1 text-sm text-slate-300 hover:bg-slate-700">ACID</Link>
           <Link href="/concepts/circuit-breaker" className="rounded-md bg-slate-800 px-2.5 py-1 text-sm text-slate-300 hover:bg-slate-700">Circuit Breaker</Link>
           <Link href="/concepts/saga" className="rounded-md bg-slate-800 px-2.5 py-1 text-sm text-slate-300 hover:bg-slate-700">Saga</Link>
-          <span className="rounded-md bg-slate-800 px-2.5 py-1 text-sm text-slate-300">Idempotency</span>
+          <Link href="/concepts/idempotency" className="rounded-md bg-slate-800 px-2.5 py-1 text-sm text-slate-300 hover:bg-slate-700">Idempotency</Link>
         </p>
       </Section>
     </main>

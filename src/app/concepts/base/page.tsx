@@ -41,32 +41,37 @@ export default function BasePage() {
 
       <Section title="Definition">
         <p>
-          BASE systems favour <strong>availability</strong> over immediate consistency. A write is accepted and
-          acknowledged quickly, then propagated to replicas asynchronously. For a short window replicas hold{" "}
-          <strong>stale</strong> data (soft state); given no new writes, they all <strong>eventually</strong> converge.
+          BASE systems choose to stay <strong>available</strong> instead of being immediately consistent. A write is
+          accepted and confirmed quickly on one server, then copied out to the other servers (replicas) in the
+          background.
+        </p>
+        <p>
+          During that short window, a replica can answer with old data — that&rsquo;s the <strong>soft state</strong>{" "}
+          part. As long as no new writes come in, every replica eventually catches up and agrees — that&rsquo;s the{" "}
+          <strong>eventually consistent</strong> part.
         </p>
       </Section>
 
       <Section title="The problem it solves">
         <p>
-          Synchronously updating every replica before acknowledging a write is slow and fragile — one slow replica
-          stalls everyone. BASE trades a little freshness for high availability and low latency, which is exactly what
-          large-scale, read-heavy systems want.
+          If you make every replica confirm a write before telling the client it succeeded, one slow or unreachable
+          replica can stall every single write. BASE trades a little bit of freshness for high availability and low
+          latency — exactly the trade that large, read-heavy systems want to make.
         </p>
       </Section>
 
       <Section title="Try it">
         <p>
-          Write a new value and watch it hit the primary instantly, then ripple out to the replicas after the
-          replication delay. During that window, reading a replica returns the old (stale) value.
+          Write a new value and watch it land on the primary server instantly, then ripple out to the replicas after
+          a short replication delay. During that window, reading from a replica returns the old (stale) value.
         </p>
         <BaseViz />
       </Section>
 
       <Section title="Analogy">
         <p>
-          A rumour spreading through a group. The moment you hear it, you know it — but it takes time to reach everyone,
-          and until it does, different people give different answers. Eventually everyone agrees.
+          A rumour spreading through a group. The moment you hear it, you know it — but it takes time to reach
+          everyone, and until it does, different people give different answers. Eventually everyone agrees.
         </p>
       </Section>
 
@@ -74,32 +79,32 @@ export default function BasePage() {
         <p>
           DynamoDB, Cassandra, and read-replica setups in{" "}
           <Link href="/technologies/postgresql" className="text-sky-400 hover:text-sky-300">PostgreSQL</Link> /{" "}
-          <Link href="/technologies/mongodb" className="text-sky-400 hover:text-sky-300">MongoDB</Link>. Any time you read
-          from a replica, you are accepting BASE semantics.
+          <Link href="/technologies/mongodb" className="text-sky-400 hover:text-sky-300">MongoDB</Link>. Any time you
+          read from a replica instead of the primary, you are accepting BASE semantics.
         </p>
       </Section>
 
       <Section title="How to implement">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Use asynchronous replication (or an eventually-consistent store) — accept the write on one node and propagate in the background.</li>
-          <li>Make updates idempotent and, ideally, commutative — last-write-wins timestamps or CRDTs — so replicas converge without coordination.</li>
-          <li>Offer read-your-writes only where it matters (sticky sessions, or read-from-primary for that flow).</li>
+          <li>Use asynchronous replication (or an eventually-consistent store) — accept the write on one node, then propagate it to the others in the background.</li>
+          <li>Make updates idempotent and, ideally, commutative — last-write-wins timestamps or CRDTs — so replicas converge to the same value without needing to coordinate.</li>
+          <li>Offer read-your-writes only where it matters, using sticky sessions or by reading from the primary for that specific flow.</li>
         </ul>
       </Section>
 
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Availability, scale, and low latency vs stale reads and conflict-resolution complexity.</li>
-          <li>Great for feeds, counters, catalogs, and social graphs; wrong for money or inventory (use <Link href="/concepts/acid" className="text-sky-400 hover:text-sky-300">ACID</Link>).</li>
-          <li>&ldquo;Eventually&rdquo; is a range — under load, convergence can take seconds.</li>
+          <li>Availability, scale, and low latency vs stale reads and the extra work of resolving conflicts.</li>
+          <li>Great for feeds, counters, catalogs, and social graphs; the wrong choice for money or inventory (use <Link href="/concepts/acid" className="text-sky-400 hover:text-sky-300">ACID</Link> there).</li>
+          <li>&ldquo;Eventually&rdquo; is not instant — under load, convergence can take seconds, not milliseconds.</li>
         </ul>
       </Section>
 
       <Section title="Common mistakes">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Reading your own writes from a lagging replica and showing the user stale data.</li>
-          <li>Assuming &ldquo;eventually&rdquo; is instant — under load, lag can be seconds.</li>
-          <li>Using eventual consistency where money or inventory needs a strong guarantee (use <Link href="/concepts/acid" className="text-sky-400 hover:text-sky-300">ACID</Link>).</li>
+          <li>Reading your own write back from a lagging replica and showing the user stale data.</li>
+          <li>Assuming &ldquo;eventually&rdquo; means immediately — under load, lag can stretch to seconds.</li>
+          <li>Using eventual consistency where money or inventory needs a strong guarantee instead (use <Link href="/concepts/acid" className="text-sky-400 hover:text-sky-300">ACID</Link>).</li>
         </ul>
       </Section>
 

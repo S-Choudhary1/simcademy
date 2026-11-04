@@ -33,58 +33,72 @@ export default function LockingPage() {
         <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-0.5 text-xs font-medium text-fuchsia-300">Concept</span>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50">Locking &amp; Concurrency</h1>
         <p className="mt-2 text-slate-400">
-          When two requests touch the same row at once, something has to give — or an update gets lost.
+          When two requests touch the same row at the same time, something has to give — or an update quietly
+          disappears.
         </p>
       </header>
 
       <Section title="Definition">
         <p>
-          Concurrency control decides what happens when operations overlap. <strong>Optimistic</strong> locking assumes
-          conflicts are rare and detects them with a version check at write time. <strong>Pessimistic</strong> locking
-          assumes conflicts are likely and takes a lock up front so writers wait their turn. A <strong>distributed
-          lock</strong> extends that across separate processes or services.
+          <strong>Concurrency control</strong> decides what happens when two operations try to touch the same data at
+          the same time. <strong>Optimistic locking</strong> assumes conflicts are rare: it lets both operations
+          proceed and only checks for a conflict at write time, using a version number. <strong>Pessimistic
+          locking</strong> assumes conflicts are common: it takes a lock up front, so one writer simply waits for the
+          other to finish. A <strong>distributed lock</strong> is the same idea as pessimistic locking, but
+          coordinated across separate processes or services instead of inside one database.
         </p>
       </Section>
 
       <Section title="The problem it solves">
         <p>
-          Two requests both read a balance of $100, both add $50, and both write back $150 — one write silently
-          overwrites the other. The bank is now missing $50. That is the <strong>lost update</strong>, and it happens
-          any time read-modify-write isn&rsquo;t protected.
+          Two requests both read a balance of $100. Both add $50 on their own. Both write back $150. One of those two
+          $50 deposits just vanished — the account should show $200, not $150. This is called a{" "}
+          <strong>lost update</strong>, and it happens any time a &ldquo;read, then write based on what you
+          read&rdquo; sequence isn&rsquo;t protected from another request doing the exact same thing at the same
+          time.
         </p>
       </Section>
 
       <Section title="Try it">
         <p>
-          Run it with <strong>No lock</strong> and watch the lost update. Then switch to <strong>Optimistic</strong>{" "}
-          (the version check forces a retry) or <strong>Pessimistic</strong> (the row lock serializes the writers) —
-          both reach the correct $200.
+          Run it with <strong>No lock</strong> and watch the update get lost. Switch to <strong>Optimistic</strong>{" "}
+          — the version check forces the second writer to retry — or <strong>Pessimistic</strong> — the row lock
+          makes the second writer simply wait its turn. Both end up at the correct $200.
         </p>
         <LockingViz />
       </Section>
 
       <Section title="Analogy">
         <p>
-          A shared document. Optimistic locking is &ldquo;save, and if someone edited since you opened it, you get a
-          merge conflict&rdquo;. Pessimistic locking is &ldquo;check the file out so no one else can edit until you
-          check it back in&rdquo;.
+          A shared document. Optimistic locking is &ldquo;save, and if someone edited it since you opened it, you get
+          a merge conflict to resolve.&rdquo; Pessimistic locking is &ldquo;check the file out so no one else can
+          edit it until you check it back in.&rdquo;
         </p>
       </Section>
 
       <Section title="How to implement">
-        <p><strong>Optimistic</strong> — a version column; the write only lands if the version is unchanged:</p>
+        <p>
+          <strong>Optimistic</strong> — keep a version number on the row; the write only succeeds if the version
+          hasn&rsquo;t changed since you read it:
+        </p>
         <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">
 {`UPDATE accounts SET balance = 150, version = version + 1
 WHERE id = 42 AND version = 1;      -- 0 rows updated → conflict → reload & retry`}
         </pre>
-        <p><strong>Pessimistic</strong> — lock the row for the duration of the transaction:</p>
+        <p>
+          <strong>Pessimistic</strong> — lock the row for the whole transaction so nobody else can touch it until
+          you&rsquo;re done:
+        </p>
         <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">
 {`BEGIN;
   SELECT balance FROM accounts WHERE id = 42 FOR UPDATE;  -- others block here
   UPDATE accounts SET balance = balance + 50 WHERE id = 42;
 COMMIT;`}
         </pre>
-        <p><strong>Distributed</strong> — across processes, a lease in Redis (release by matching the token, via a Lua script):</p>
+        <p>
+          <strong>Distributed</strong> — across separate processes, a time-limited lease in Redis, released only by
+          whoever holds the matching token (so you never accidentally release someone else&rsquo;s lock):
+        </p>
         <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">
 {`SET lock:account:42 <token> NX PX 30000   # acquire (fails if held); 30s expiry
 # ... do the work ...
@@ -94,17 +108,17 @@ COMMIT;`}
 
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li><strong>Optimistic</strong>: no waiting, great under low contention — but wasted work and retries when contention is high.</li>
-          <li><strong>Pessimistic</strong>: simple correctness — but writers block, throughput drops, and you risk deadlocks.</li>
-          <li><strong>Distributed locks</strong>: necessary across services, but add failure modes (lock expiry mid-work, clock skew; Redlock&rsquo;s safety is debated) — prefer a DB constraint or idempotency when you can.</li>
+          <li><strong>Optimistic</strong>: no waiting, and efficient when conflicts are rare — but wasted work and retries pile up once contention gets high.</li>
+          <li><strong>Pessimistic</strong>: simple to reason about and always correct — but writers queue up behind each other, throughput drops, and locks taken in different orders can deadlock.</li>
+          <li><strong>Distributed locks</strong>: sometimes the only option across services, but they add real failure modes (the lock expiring while you&rsquo;re still working, clocks on different machines drifting — Redlock&rsquo;s safety guarantees are genuinely disputed). Prefer a database constraint or idempotency check over a distributed lock whenever either one will do the job.</li>
         </ul>
       </Section>
 
       <Section title="Common mistakes">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Read-modify-write in app code with no version check or lock — the classic lost update.</li>
-          <li>A distributed lock with no expiry (a crashed holder blocks everyone) or one that ignores the fencing token.</li>
-          <li>Holding a lock across a slow network call, throttling the whole system.</li>
+          <li>Doing read-modify-write in application code with no version check and no lock — the classic lost update.</li>
+          <li>A distributed lock with no expiry (a crashed lock-holder blocks everyone forever) or one that ignores the fencing token (a slow, delayed writer can stomp on someone else&rsquo;s work).</li>
+          <li>Holding a lock across a slow network call — that throttles everyone else waiting on it.</li>
         </ul>
       </Section>
 

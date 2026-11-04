@@ -41,12 +41,17 @@ export default function MonolithVsMicroservicesPage() {
 
       <H2 id="calls">The function call becomes a network</H2>
       <P>
-        In a monolith, module A calls module B directly: nanoseconds, no serialization, no failure mode beyond a bug.
-        Split them into services and that call now crosses the wire — it needs an <A href="/comparisons/rest-vs-grpc-vs-graphql">API</A>,
-        serialization, <A href="/concepts/retries-backoff">retries with backoff</A>, a{" "}
-        <A href="/concepts/circuit-breaker">circuit breaker</A>, and <A href="/concepts/idempotency">idempotency</A> so a
-        retry doesn&rsquo;t double-charge someone. A transaction that spanned two tables now needs a{" "}
-        <A href="/concepts/saga">saga</A>. None of this is incidental — it&rsquo;s the inherent cost of the network.
+        In a monolith, module A calls module B directly, in the same process: nanoseconds, no conversion to send over
+        a wire, and the only way it fails is a bug. Split A and B into separate services and that same call now has
+        to travel over the network, which changes its failure modes completely. It needs an{" "}
+        <A href="/comparisons/rest-vs-grpc-vs-graphql">API</A> to even talk, a format to convert data into and back
+        out of for sending, and a plan for when the network itself misbehaves: automatic{" "}
+        <A href="/concepts/retries-backoff">retries with backoff</A> for a call that times out, a{" "}
+        <A href="/concepts/circuit-breaker">circuit breaker</A> to stop hammering a service that&rsquo;s already down,
+        and <A href="/concepts/idempotency">idempotency</A> so a retried request doesn&rsquo;t accidentally double-charge
+        someone. And a database update that used to be one local transaction across two tables now needs a{" "}
+        <A href="/concepts/saga">saga</A> once those two tables live in two different services&rsquo; databases. None
+        of this is incidental — it&rsquo;s the inherent cost of turning a function call into a network call.
       </P>
 
       <PullQuote>Microservices don&rsquo;t remove complexity. They move it out of your compiler and into the space between your services — where the compiler can&rsquo;t help you.</PullQuote>
@@ -56,8 +61,11 @@ export default function MonolithVsMicroservicesPage() {
         Because past a certain size, the bottleneck isn&rsquo;t the machine — it&rsquo;s the <strong>team</strong>. When
         forty engineers share one deployable, every release is a coordinated event and one bad change blocks everyone.
         Independent services let teams <strong>deploy on their own schedule</strong>, choose their own stack, and scale
-        the hot path (the checkout service) without scaling everything. That organizational win — not raw performance —
-        is the real reason to adopt microservices (see <em>Conway&rsquo;s Law</em>).
+        the hot path (say, the checkout service) without scaling everything else alongside it. That organizational win
+        — not raw performance — is the real reason to adopt microservices. It&rsquo;s the same idea as{" "}
+        <em>Conway&rsquo;s Law</em>: a system&rsquo;s architecture tends to mirror the communication structure of the
+        organization that built it, so giving teams separate services lets them actually work independently instead
+        of constantly coordinating through one shared codebase.
       </P>
 
       <H2 id="modular">The middle path: a modular monolith</H2>

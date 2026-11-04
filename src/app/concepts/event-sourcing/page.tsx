@@ -33,52 +33,64 @@ export default function EventSourcingPage() {
         <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-0.5 text-xs font-medium text-fuchsia-300">Concept</span>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50">Event Sourcing</h1>
         <p className="mt-2 text-slate-400">
-          Store the sequence of changes, not the current state — and derive state by replaying them.
+          Store every change that happened, not just the current state — then rebuild any state by replaying them.
         </p>
       </header>
 
       <Section title="Definition">
         <p>
-          Instead of a mutable <code>balance</code> column, you persist an append-only log of <strong>events</strong>{" "}
-          (<em>Deposited $100</em>, <em>Withdrew $30</em>). The current state is a <strong>fold</strong> over that log.
-          The log is the source of truth; state is a derived view you can always recompute.
+          Instead of storing just the current value (like a mutable <code>balance</code> column you overwrite on every
+          update), you store every change as it happens, in order, as an <strong>event</strong> — for example{" "}
+          <em>Deposited $100</em>, then <em>Withdrew $30</em>. This append-only list of events is the{" "}
+          <strong>source of truth</strong>. The current state isn&rsquo;t stored anywhere directly — it&rsquo;s
+          calculated by replaying every event in order, a step called a <strong>fold</strong> (just a term for
+          &ldquo;combine these one at a time into a running result,&rdquo; the same idea as a running total).
         </p>
       </Section>
 
       <Section title="The problem it solves">
         <p>
-          Storing only current state throws away history: you can&rsquo;t answer &ldquo;what did this look like last
-          Tuesday?&rdquo;, you have no audit trail, and you can&rsquo;t build a new view of old data. Event sourcing
-          keeps every change, so history, audit, and new projections are all recoverable.
+          If you only ever store the current balance, you throw away history: you can&rsquo;t answer &ldquo;what did
+          this look like last Tuesday?&rdquo;, there&rsquo;s no audit trail of what happened and when, and you
+          can&rsquo;t build a brand-new view of old data after the fact. Event sourcing keeps every change, so
+          history, audits, and new read views are all recoverable later — even ones you didn&rsquo;t think to build
+          yet.
         </p>
       </Section>
 
       <Section title="Try it">
         <p>
-          Append deposits and withdrawals to the log, then drag the <strong>time-travel</strong> scrubber: the balance
-          is recomputed by replaying events up to that point. There is no stored balance — it&rsquo;s always derived.
+          Append a few deposits and withdrawals to the log, then drag the <strong>time-travel</strong> scrubber. The
+          balance you see isn&rsquo;t stored anywhere — it&rsquo;s recomputed on the spot by replaying every event up
+          to that point in time.
         </p>
         <EventSourcingViz />
       </Section>
 
       <Section title="Analogy">
         <p>
-          A bank ledger, or Git. You don&rsquo;t keep only today&rsquo;s balance / the latest file — you keep every
-          transaction / commit, and reconstruct any state by replaying from the start.
+          A bank ledger, or a Git repository. You don&rsquo;t keep only today&rsquo;s balance or only the latest
+          version of a file — you keep every transaction, or every commit, and you can reconstruct any past state by
+          replaying from the start.
         </p>
       </Section>
 
       <Section title="Where it&rsquo;s used">
         <p>
-          Accounting and ledgers, order and trading systems, and audit-heavy domains. It pairs naturally with{" "}
-          <Link href="/concepts/cqrs" className="text-sky-400 hover:text-sky-300">CQRS</Link> — the events feed
-          projections that become read models — and reliably ships those events via the{" "}
-          <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">outbox</Link>.
+          Accounting and ledgers, order and trading systems, and any audit-heavy domain where &ldquo;what exactly
+          happened, and when&rdquo; matters as much as the final number. It pairs naturally with{" "}
+          <Link href="/concepts/cqrs" className="text-sky-400 hover:text-sky-300">CQRS</Link> — the events feed{" "}
+          projections that become read models — and ships those events reliably via the{" "}
+          <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">outbox</Link> pattern.
         </p>
       </Section>
 
       <Section title="How to implement">
-        <p>Append immutable events; rebuild state by folding; snapshot to keep replay fast:</p>
+        <p>
+          Append immutable events — never update or delete one. Rebuild state by folding (replaying) them in order.
+          For a long history, take a snapshot every so often so you don&rsquo;t have to replay from the very
+          beginning each time:
+        </p>
         <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">
 {`// write: append, never update
 store.append(accountId, { type: "Deposited", amount: 100 })
@@ -89,22 +101,25 @@ const state = events.reduce(apply, initialState)
 // performance: snapshot every N events, then replay only events after it
 const state = apply(loadSnapshot(id), eventsSince(snapshot.version))`}
         </pre>
-        <p>Publish each event so projections (and other services) can build their own views.</p>
+        <p>
+          Publish each event too, so other parts of the system — projections, other services — can build their own
+          views from the same history.
+        </p>
       </Section>
 
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Full history, audit, time travel, and rebuildable read models vs the complexity of a fundamentally different model.</li>
-          <li>Querying needs projections — you can&rsquo;t just <code>SELECT</code> current state from the log.</li>
-          <li>Replaying a long log is slow without snapshots; and events must be versioned as the schema evolves.</li>
+          <li>Full history, an audit trail, time travel, and rebuildable read models — at the cost of a genuinely different way of modelling your data.</li>
+          <li>Querying needs a projection; you can&rsquo;t just <code>SELECT</code> the current state straight out of the event log.</li>
+          <li>Replaying a long log gets slow without snapshots, and events need a versioning plan for when your schema changes.</li>
         </ul>
       </Section>
 
       <Section title="Common mistakes">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Editing or deleting past events — the log must be immutable (append a corrective event instead).</li>
-          <li>No snapshots, so rebuilding an aggregate replays thousands of events.</li>
-          <li>Not versioning event schemas, so old events can&rsquo;t be replayed after a change.</li>
+          <li>Editing or deleting a past event — the log must stay immutable; fix mistakes by appending a new corrective event instead.</li>
+          <li>Skipping snapshots, so rebuilding one aggregate replays thousands of events every single time.</li>
+          <li>Not versioning event schemas, so old events can&rsquo;t be replayed anymore once the shape of an event changes.</li>
         </ul>
       </Section>
 

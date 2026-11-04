@@ -33,55 +33,62 @@ export default function SagaPage() {
         <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-0.5 text-xs font-medium text-fuchsia-300">Concept</span>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50">Saga Pattern</h1>
         <p className="mt-2 text-slate-400">
-          A distributed transaction as a chain of local transactions, with compensation to undo on failure.
+          Run a transaction that spans several services as a chain of smaller steps, with a plan to undo them if one
+          fails.
         </p>
       </header>
 
       <Section title="Definition">
         <p>
-          A saga splits a business transaction that spans multiple services into a sequence of <strong>local
-          transactions</strong>, one per service. Each step commits in its own database and triggers the next. If a
-          later step fails, the saga runs <strong>compensating transactions</strong> — one per completed step, in
-          reverse — to semantically undo the work.
+          A saga breaks one business transaction that spans multiple services into a sequence of smaller{" "}
+          <strong>local transactions</strong> — one per service, each committed on its own. If a later step fails,
+          the saga runs a <strong>compensating transaction</strong> for every step that already succeeded, in reverse
+          order, to undo their effects.
         </p>
       </Section>
 
       <Section title="The problem it solves">
         <p>
-          You can&rsquo;t hold one <Link href="/concepts/acid" className="text-sky-400 hover:text-sky-300">ACID</Link>{" "}
-          transaction across separate services and databases — there is no shared commit. A saga gives you atomicity of{" "}
-          <em>outcome</em> (everything happens, or everything is compensated) without a distributed lock.
+          You can&rsquo;t wrap one{" "}
+          <Link href="/concepts/acid" className="text-sky-400 hover:text-sky-300">ACID</Link> transaction around
+          several separate services and databases — there&rsquo;s no single shared commit button that covers all of
+          them. A saga gets you atomicity of the <em>end result</em> instead: either everything happens, or
+          everything gets undone — without needing a distributed lock across services.
         </p>
       </Section>
 
       <Section title="Try it">
         <p>
-          Pick where a step fails and press Run. Watch the steps commit forward (green), the failure (red), then the
-          compensating transactions undo the earlier steps in reverse (amber). Choose &ldquo;None&rdquo; to see the
-          happy path.
+          Pick where a step should fail, then press Run. Watch the steps commit forward one by one (green), hit the
+          failure (red), then watch the compensating transactions undo the earlier steps in reverse order (amber).
+          Choose &ldquo;None&rdquo; to see the happy path, where nothing needs undoing.
         </p>
         <SagaViz />
       </Section>
 
       <Section title="Analogy">
         <p>
-          Booking a trip: reserve the flight, then the hotel, then the car. If the car reservation fails, you don&rsquo;t
-          keep a half-booked trip — you cancel the hotel and the flight (compensation) to get back to a clean state.
+          Booking a trip: reserve the flight, then the hotel, then the car. If the car reservation fails, you
+          don&rsquo;t keep a half-booked trip sitting around — you cancel the hotel and the flight (the
+          compensations) to get back to a clean state.
         </p>
       </Section>
 
       <Section title="Where it&rsquo;s used">
         <p>
-          E-commerce checkout, travel booking, and any multi-service workflow. Two styles:{" "}
-          <strong>orchestration</strong> (a coordinator drives each step, as simulated here) and{" "}
-          <strong>choreography</strong> (each service reacts to the previous one&rsquo;s event). Either way, steps
-          publish their events reliably via the{" "}
-          <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">Transactional Outbox</Link>.
+          E-commerce checkout, travel booking, and any workflow that touches several services. There are two common
+          styles: <strong>orchestration</strong>, where one coordinator calls each step in order (what this
+          simulation shows), and <strong>choreography</strong>, where each service just reacts to the previous
+          service&rsquo;s event with no central coordinator. Either way, publish each step&rsquo;s event reliably via
+          the <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">Transactional Outbox</Link>.
         </p>
       </Section>
 
       <Section title="How to implement">
-        <p>Orchestration — a coordinator drives each step and its compensation:</p>
+        <p>
+          Orchestration is the simplest to reason about — one coordinator calls each step, and if any step throws, it
+          calls the compensations for whatever already succeeded, in reverse order:
+        </p>
         <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">
 {`try {
   await createOrder();
@@ -96,24 +103,24 @@ export default function SagaPage() {
 }`}
         </pre>
         <ul className="list-disc space-y-1 pl-5">
-          <li>Or choreography: each service reacts to the previous step&rsquo;s event (published via the <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">outbox</Link>).</li>
-          <li>Define a compensating action for every step, and make steps + compensations idempotent (they will be retried).</li>
+          <li>With choreography instead, each service listens for the previous step&rsquo;s event and reacts on its own — no central coordinator (publish those events via the <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">outbox</Link>).</li>
+          <li>Write a compensating action for every single step, and make both the steps and their compensations idempotent — either one can be retried after a crash or timeout.</li>
         </ul>
       </Section>
 
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Cross-service atomicity without a distributed lock/2PC vs no isolation — other transactions can see intermediate state.</li>
-          <li>You must write and maintain a compensation for each step (and some actions can&rsquo;t truly be undone).</li>
-          <li>Orchestration is centralized and easy to trace; choreography is decoupled but harder to follow.</li>
+          <li>Atomicity of the outcome across services, without a distributed lock or 2PC — but you lose isolation: other parts of the system can see things in a half-finished state while the saga is still running.</li>
+          <li>Every step needs its own compensation to write and maintain, and some real actions genuinely can&rsquo;t be undone (you can refund a payment, but you can&rsquo;t un-send a confirmation email).</li>
+          <li>Orchestration is centralized and easy to trace end-to-end; choreography has no single coordinator to fail, but it&rsquo;s harder to follow who reacts to what.</li>
         </ul>
       </Section>
 
       <Section title="Common mistakes">
         <ul className="list-disc space-y-1 pl-5">
-          <li>No compensating action for a step — you can&rsquo;t roll back, so partial failure sticks.</li>
-          <li>Assuming isolation: other transactions can see intermediate saga state (no global lock).</li>
-          <li>Non-idempotent steps/compensations, so a retry double-applies.</li>
+          <li>Writing a step with no compensating action — a failure partway through then has no way to roll back.</li>
+          <li>Assuming isolation that doesn&rsquo;t exist — other transactions can see the saga&rsquo;s intermediate, half-done state; there is no global lock.</li>
+          <li>Steps or compensations that aren&rsquo;t idempotent, so a retry ends up applying the same effect twice.</li>
         </ul>
       </Section>
 

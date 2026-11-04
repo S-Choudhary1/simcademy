@@ -58,162 +58,183 @@ export default function PostgresPage() {
             Technology
           </span>
           <span className="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs font-medium text-slate-400">
-            Advanced
+            Beginner → Advanced
           </span>
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-50">PostgreSQL</h1>
         <p className="mt-2 text-slate-400">
-          A relational database that scales reads with replicas kept in sync by streaming
-          replication.
+          A relational database that handles far more reads than one machine could, by keeping extra copies (replicas) in sync with the main copy.
         </p>
       </header>
 
       <Section id="overview" title="1. Overview">
         <p>
-          PostgreSQL is a durable, ACID-compliant relational database. A single{" "}
-          <strong>primary</strong> accepts all writes and streams its change log (the{" "}
-          <strong>WAL</strong>) to one or more <strong>replicas</strong>, which apply those changes
-          and can serve read queries. This is how a single logical database serves far more reads
-          than one machine could.
+          PostgreSQL is a durable, <strong>ACID-compliant</strong> relational database — once it tells you a write
+          succeeded, that write is safe even if the server crashes a second later. One server, the{" "}
+          <strong>primary</strong>, accepts every write. It streams a record of every change (the{" "}
+          <strong>WAL</strong>, short for write-ahead log) to one or more <strong>replicas</strong> — copies of the
+          database that apply those same changes and can answer read queries. This is how one logical database can
+          serve far more reads than a single machine could handle alone.
         </p>
       </Section>
 
       <Section id="problem" title="2. Why it exists">
         <p>
-          Most applications read far more than they write. A single server eventually can&rsquo;t
-          keep up with read volume. Replication lets you fan reads out across replicas while keeping
-          a single source of truth for writes — trading a little consistency (replicas can be
-          slightly behind) for a lot of read capacity.
+          Most applications read data far more often than they write it. A single server eventually can&rsquo;t keep
+          up with that read volume. Replication solves it by spreading reads across several replicas, while writes
+          still go through one place — the primary — so there&rsquo;s never any doubt about which copy is correct.
+          The trade: a replica can be a moment behind the primary, in exchange for a lot more read capacity.
         </p>
       </Section>
 
       <Section id="simulation" title="3. Interactive Simulation">
         <p>
-          Press <strong>Play</strong>. Writes (green) hit the primary and stream to replicas (amber
-          WAL packets); reads (sky) fan out to replicas. Push <strong>Write rate</strong> above{" "}
-          <strong>Replication throughput</strong> and the green bar on each replica shrinks — that
-          gap is <strong>replication lag</strong>. Add replicas and watch read rate climb while
-          write rate stays flat. Then <strong>Fail the primary</strong> and{" "}
-          <strong>Promote a standby</strong>.
+          Press <strong>Play</strong> and drag <strong>Traffic</strong> to change the request rate. At{" "}
+          <strong>Beginner</strong> every request hits one database; at <strong>Intermediate</strong> a cache soaks up
+          repeat reads first; at <strong>Advanced</strong> a router spreads load evenly across three database nodes
+          labelled Primary/Replica 1/Replica 2. Click any node to open the Inspector and watch its live utilisation,
+          or use <strong>Kill</strong> to take it down and see the router shift load to the remaining two.
+        </p>
+        <p>
+          One honest limitation: this generic simulator treats every request the same way, so it can&rsquo;t enforce
+          real PostgreSQL&rsquo;s rule that <em>only the primary accepts writes</em>{" "}
+          — killing &ldquo;Primary&rdquo; here just removes a third of total capacity, the same as killing either
+          replica. For the real primary-only-writes behaviour, WAL streaming, and failover, use the dedicated demo
+          just below instead.
         </p>
         <TechSimulator tech="postgresql" />
 
         <h3 className="mt-6 text-base font-semibold text-slate-100">Internals: streaming replication &amp; WAL</h3>
         <p>
-          Every commit appends to the primary&rsquo;s write-ahead log (advancing the LSN); replicas stream and apply
-          it, and the gap is replication lag. Switch between <strong>async</strong> (fast, laggy) and{" "}
-          <strong>sync</strong> (lag-free standby, capped throughput), then fail the primary and promote a standby to
-          see whether any writes are lost.
+          Every commit is appended to the primary&rsquo;s write-ahead log, advancing a counter called the{" "}
+          <strong>LSN</strong> (log sequence number) that marks exactly how far into that log you are. Replicas
+          stream that log and replay it; the gap between the primary&rsquo;s LSN and a replica&rsquo;s LSN is the
+          replication lag. Drag <strong>Write</strong> up, switch between <strong>Async</strong> replication (fast,
+          but can lag) and <strong>Sync</strong> replication (no lag on that standby, but every write waits for it),
+          then click <strong>Fail primary</strong> and <strong>Promote standby</strong> to see whether any writes get
+          lost.
         </p>
         <PostgresReplicationViz />
       </Section>
 
       <Section id="architecture" title="4. Architecture">
         <p>
-          One primary, N replicas. The primary appends every change to the WAL and streams it to
-          replicas over a replication connection. Replicas replay the WAL to stay in sync. The
-          application (or a proxy like PgBouncer/Patroni) routes writes to the primary and reads to
-          replicas.
+          One primary, N replicas. The primary appends every change to its WAL and streams that log to each replica
+          over a dedicated replication connection. Each replica replays the log to stay in sync. The application —
+          or a proxy/connection pooler like PgBouncer, or a failover manager like Patroni — routes writes to the
+          primary and reads to the replicas.
         </p>
       </Section>
 
       <Section id="lifecycle" title="5. Request Lifecycle">
         <p>
-          Write: the primary applies the change, appends it to the WAL, acknowledges the client,
-          and asynchronously ships the WAL to replicas. Read: routed to a replica, which answers
-          from its applied state — which may be slightly behind the primary if it is lagging.
+          <strong>Write:</strong> the primary applies the change, appends it to the WAL, confirms success to the
+          client, then ships that WAL entry to replicas (synchronously or asynchronously, depending on configuration).{" "}
+          <strong>Read:</strong> routed to a replica, which answers from whatever it has already applied — which can
+          be slightly out of date if that replica is lagging.
         </p>
       </Section>
 
       <Section id="components" title="6. Internal Components">
         <ul className="list-disc space-y-1 pl-5">
           <li>
-            <strong>WAL (Write-Ahead Log)</strong> — the ordered stream of changes; the basis of
-            both crash recovery and replication.
+            <strong>WAL (write-ahead log)</strong> — the ordered record of every change, written before the change
+            is applied. It&rsquo;s how PostgreSQL recovers after a crash, and how replicas stay in sync.
           </li>
           <li>
-            <strong>Streaming replication</strong> — replicas pull/receive WAL and apply it
-            continuously.
+            <strong>Streaming replication</strong> — the mechanism by which replicas continuously receive and apply
+            new WAL entries as they&rsquo;re written.
           </li>
           <li>
-            <strong>Replication slots &amp; sync/async modes</strong> — control durability vs.
-            latency of replication.
+            <strong>Replication slots &amp; sync/async modes</strong> — sync mode makes the primary wait for a
+            replica to confirm before telling the client &ldquo;done&rdquo; (safer, slower); async doesn&rsquo;t wait
+            (faster, riskier). Replication slots make sure the primary keeps WAL around until a replica has actually
+            consumed it.
           </li>
         </ul>
       </Section>
 
       <Section id="scaling" title="7. Scaling">
         <p>
-          Adding replicas scales <strong>reads</strong> — in the simulation, read rate climbs with
-          each replica. It does <strong>not</strong> scale writes: every write still funnels through
-          the one primary. Scaling writes requires sharding/partitioning, a fundamentally harder
-          problem.
+          Adding replicas scales <strong>reads</strong> — in the Advanced blueprint above, going from one database
+          node to three directly grows total read capacity. It does <strong>not</strong> scale writes: in real
+          PostgreSQL, every write still has to funnel through the one primary (the replication demo in §3 shows this
+          directly — the generic traffic simulator above it can&rsquo;t). Scaling writes beyond a single machine
+          requires sharding/partitioning the data instead, which is a fundamentally harder problem.
         </p>
       </Section>
 
       <Section id="failure" title="8. Failure Scenarios">
         <p>
-          <strong>Fail a replica</strong>: read capacity drops. <strong>Fail the primary</strong>:
-          all writes stop — the primary is a write single-point-of-failure. Click{" "}
-          <strong>Promote a standby</strong> to run a failover: the most caught-up replica becomes
-          the new primary and writes resume — but you have one fewer read replica until you add
-          another.
+          In the <strong>traffic simulator</strong> (§3): killing any one of the three database nodes — Primary or
+          either replica — just removes a third of total capacity; the router sends the rest of the traffic to the
+          other two. This generic engine has no concept of &ldquo;the primary,&rdquo; so it treats all three
+          identically.
+        </p>
+        <p>
+          For a real failover, use the <strong>replication demo</strong> instead: click <strong>Fail primary</strong>{" "}
+          and writes stop immediately, since it really is a single point of failure for writes there. Click{" "}
+          <strong>Promote standby</strong> to run the failover — the replica that was most caught-up becomes the new
+          primary and writes resume, but any writes that hadn&rsquo;t replicated yet are reported as lost.
         </p>
       </Section>
 
       <Section id="metrics" title="9. Metrics">
         <p>
-          <strong>Replication lag</strong> is the number to watch: it is how far behind the primary
-          a replica is, and therefore how stale a read from it can be. Lag grows whenever the write
-          rate exceeds a replica&rsquo;s replication throughput — the same queueing behaviour as a
-          message backlog.
+          <strong>Replication lag</strong> is the number to watch. It tells you how far behind the primary a replica
+          is, and therefore how stale a read from that replica could be. Lag grows whenever the write rate outpaces
+          how fast a replica can apply incoming WAL — the same backlog behaviour you&rsquo;d see in any queue that&rsquo;s
+          filling up faster than it drains.
         </p>
       </Section>
 
       <Section id="tradeoffs" title="10. Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Read scaling vs. consistency — replica reads can be stale (eventual consistency).</li>
-          <li>Async replication is fast but can lose recent writes on failover; sync is safe but slower.</li>
-          <li>Writes remain bottlenecked on a single primary until you shard.</li>
+          <li>Read scaling vs. consistency — reads from a replica can be stale (eventual consistency), not guaranteed to reflect the very latest write.</li>
+          <li>Async replication is fast but can lose the most recent writes if the primary fails before they reach a replica; sync replication avoids that loss but is slower.</li>
+          <li>Writes stay bottlenecked on a single primary until you shard the data across multiple primaries.</li>
         </ul>
       </Section>
 
       <Section id="comparisons" title="11. Comparisons">
         <p>
-          See <span className="text-slate-400">PostgreSQL vs MongoDB</span> (coming soon): both
-          scale reads with replicas; they differ sharply in data model, transactions, and how they
-          shard writes.
+          See{" "}
+          <Link href="/comparisons/postgresql-vs-mongodb" className="text-sky-400 hover:text-sky-300">
+            PostgreSQL vs MongoDB
+          </Link>
+          : both scale reads with replicas, but they differ sharply in data model, transaction guarantees, and how
+          they scale writes.
         </p>
       </Section>
 
       <Section id="usage" title="12. Real-world Usage">
         <p>
-          The default relational database for a huge share of modern backends — from startups to
-          large-scale systems using managed offerings (RDS, Cloud SQL, Aurora-compatible) with read
-          replicas and automated failover (Patroni, pg_auto_failover).
+          The default relational database for a huge share of modern backends — from small startups to large-scale
+          systems — usually run as a managed offering (RDS, Cloud SQL, or an Aurora-compatible service) with read
+          replicas and automated failover tools like Patroni or pg_auto_failover.
         </p>
       </Section>
 
       <Section id="related" title="13. Related Concepts">
         <p className="flex flex-wrap gap-2">
-          {["ACID", "WAL", "Eventual Consistency", "Leader Election", "Sharding"].map((c) => (
-            <span key={c} className="rounded-md bg-slate-800 px-2.5 py-1 text-sm text-slate-300">
-              {c}
-            </span>
-          ))}
+          <Link href="/concepts/acid" className="rounded-md bg-slate-800 px-2.5 py-1 text-sm text-slate-300 hover:bg-slate-700">ACID</Link>
+          <span className="rounded-md bg-slate-800 px-2.5 py-1 text-sm text-slate-300">WAL</span>
+          <Link href="/concepts/base" className="rounded-md bg-slate-800 px-2.5 py-1 text-sm text-slate-300 hover:bg-slate-700">Eventual Consistency</Link>
+          <Link href="/concepts/raft" className="rounded-md bg-slate-800 px-2.5 py-1 text-sm text-slate-300 hover:bg-slate-700">Leader Election</Link>
+          <Link href="/concepts/sharding" className="rounded-md bg-slate-800 px-2.5 py-1 text-sm text-slate-300 hover:bg-slate-700">Sharding</Link>
         </p>
       </Section>
 
       <Section id="interview" title="14. Interview Questions">
         <ol className="list-decimal space-y-1 pl-5">
           <li>Why does adding read replicas scale reads but not writes?</li>
-          <li>What is replication lag, and how can it cause a read-your-writes anomaly?</li>
-          <li>Contrast synchronous and asynchronous replication and their failover implications.</li>
+          <li>What is replication lag, and how can it cause a read-your-writes anomaly (where a user doesn&rsquo;t see their own write right after making it)?</li>
+          <li>Contrast synchronous and asynchronous replication and what each means for failover.</li>
           <li>What happens during a failover, and what can you lose?</li>
         </ol>
       </Section>
 
-      <Section id="usage" title="How to use it">
+      <Section id="how-to-use" title="How to use it">
         <p>Wrap writes in transactions, split reads to replicas, and pool your connections:</p>
         <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">
 {`-- correctness: a transaction is atomic

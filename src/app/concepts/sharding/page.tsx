@@ -38,36 +38,77 @@ export default function ShardingPage() {
 
       <Section title="Definition">
         <p>
-          <strong>Sharding</strong> (horizontal partitioning) splits a dataset across independent nodes by a{" "}
-          <strong>shard key</strong>. Each shard owns a subset of the keys and handles its own reads and writes, so
-          total capacity scales with the number of shards. The two dominant schemes are <strong>range</strong> and{" "}
-          <strong>hash</strong> — and the choice has very different failure modes.
+          <strong>Sharding</strong> — also called horizontal partitioning — splits one big dataset across several
+          independent machines, called <strong>shards</strong>, using a <strong>shard key</strong> to decide which
+          shard each row or document belongs to. Each shard only has to handle its own slice of the data, so total
+          capacity grows as you add more shards.
+        </p>
+        <p>
+          How you pick the shard key changes everything. The two most common approaches are{" "}
+          <strong>range</strong> and <strong>hash</strong>, and they fail in very different ways.
         </p>
       </Section>
 
       <Section title="Try it">
         <p>
-          Flip between <strong>range</strong> and <strong>hash</strong> sharding, and between a <strong>spread-out</strong>{" "}
-          and a <strong>sequential</strong> key workload. Watch the load per shard, then press <strong>+ Shard</strong>{" "}
-          and see how many keys have to move.
+          Switch between <strong>range</strong> and <strong>hash</strong> sharding, and between <strong>spread-out</strong>{" "}
+          and <strong>sequential</strong> keys. Watch how evenly the load lands on each shard, then press{" "}
+          <strong>+ Shard</strong> and see how many keys actually have to move.
         </p>
         <ShardingViz />
       </Section>
 
       <Section title="Range vs hash">
         <ul className="list-disc space-y-1 pl-5">
-          <li><strong>Range</strong> keeps keys ordered, so range queries (<code>BETWEEN</code>, time windows) touch few shards. But monotonic keys — auto-increment ids, timestamps — all land in the last range, creating a <strong>hot shard</strong>.</li>
-          <li><strong>Hash</strong> scatters keys evenly regardless of workload, killing hot spots. The cost: you lose ordered range scans, and naive <code>hash(key) % N</code> remaps nearly every key when <code>N</code> changes.</li>
+          <li><strong>Range</strong> keeps keys in order, so a range query (<code>BETWEEN</code>, &ldquo;last 7 days&rdquo;) only has to touch a few shards. The catch: keys that increase in a predictable way — auto-increment IDs, timestamps — all land in the newest range, piling all the write traffic onto one <strong>hot shard</strong>.</li>
+          <li><strong>Hash</strong> spreads keys out evenly no matter what the workload looks like, so there&rsquo;s no hot shard. The cost: you lose ordered range scans, and a naive <code>hash(key) % N</code> reshuffles almost every key the moment <code>N</code> changes.</li>
         </ul>
       </Section>
 
       <Section title="The resharding problem">
         <p>
-          With plain modulo hashing, adding one shard changes <code>key % N</code> for roughly{" "}
-          <strong>(N−1)/N of all keys</strong> — a massive, cluster-wide data shuffle.{" "}
+          With plain modulo hashing, adding just one shard changes <code>hash(key) % N</code> for nearly every key —
+          only about 1-in-<code>N</code> keys happen to land on the same shard by coincidence, so almost the entire
+          dataset has to move at once.{" "}
           <Link href="/concepts/consistent-hashing" className="text-sky-400 hover:text-sky-300">Consistent hashing</Link>{" "}
-          fixes exactly this: adding or removing a node moves only ~1/N of the keys, not almost all of them.
+          fixes exactly this: adding or removing a shard only moves about 1/N of the keys, not nearly all of them.
         </p>
+      </Section>
+
+      <Section title="Analogy">
+        <p>
+          A library with one giant shelf that got too full, so the books get split across several rooms. Sort by
+          title (range sharding) and &ldquo;find all books starting with S&rdquo; is fast — but a flood of new books
+          on a trending topic that all happen to start with the same letter piles onto one room. Sort by a scrambled
+          code stamped inside the cover (hash sharding) and books land evenly across every room — but now
+          &ldquo;find all books starting with S&rdquo; means checking every single room.
+        </p>
+      </Section>
+
+      <Section title="Where it&rsquo;s used">
+        <p>
+          Any system with more data or traffic than one machine can comfortably hold:{" "}
+          <Link href="/technologies/mongodb" className="text-sky-400 hover:text-sky-300">MongoDB</Link> and Cassandra
+          shard natively, as do large-scale SQL deployments using tools like Vitess (for MySQL) or Citus (for
+          PostgreSQL), and plenty of systems that manually split data by customer ID or region.
+        </p>
+      </Section>
+
+      <Section title="How to implement">
+        <ul className="list-disc space-y-1 pl-5">
+          <li>Pick a shard key that spreads both storage and traffic evenly — usually something high-cardinality like a user ID, not a low-cardinality field like country or status.</li>
+          <li>Choose range vs hash based on your query patterns: lean range if you need frequent range scans (and avoid a monotonically increasing key); lean hash if you mostly do point lookups and want to avoid hot shards.</li>
+          <li>Design the application so most queries can be routed to a single shard using the shard key — a routing layer (like MongoDB&rsquo;s <code>mongos</code>) directs each query to the right shard(s).</li>
+          <li>Plan for resharding from day one: either lean on consistent hashing so adding a shard is cheap, or pick a shard count you&rsquo;re confident will last.</li>
+        </ul>
+      </Section>
+
+      <Section title="Trade-offs">
+        <ul className="list-disc space-y-1 pl-5">
+          <li>Scaling storage and throughput by adding machines vs real operational cost: cross-shard queries, joins, and transactions get slow or impossible, and resharding can mean a major data migration.</li>
+          <li>The shard key choice is make-or-break — pick wrong and you can end up with one overloaded shard no matter how many shards you add.</li>
+          <li>Sharding solves a capacity problem, not a correctness problem — it&rsquo;s worth the added complexity once a single, well-tuned machine genuinely can&rsquo;t keep up, not before.</li>
+        </ul>
       </Section>
 
       <Section title="Common mistakes">

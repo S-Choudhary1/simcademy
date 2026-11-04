@@ -31,66 +31,110 @@ export default function CassandraPage() {
         <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-medium text-emerald-300">Technology</span>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50">Apache Cassandra</h1>
         <p className="mt-2 text-slate-400">
-          A masterless, wide-column store designed for enormous write throughput and no single point of failure — the
-          database behind write-heavy workloads at Netflix, Apple, and Discord.
+          A database with no single leader, built to absorb huge write volume and keep running even if a node or an
+          entire datacenter goes down — used for write-heavy workloads at Netflix, Apple, and Discord.
         </p>
       </header>
 
       <Section title="1. What it is">
         <p>
-          Cassandra is a <strong>distributed wide-column database</strong> with a <strong>masterless</strong>{" "}
-          (peer-to-peer) design: every node is equal, so there&rsquo;s no leader to fail and writes can hit any node. It
-          spreads data across a <Link href="/concepts/consistent-hashing" className="text-sky-400 hover:text-sky-300">consistent-hashing</Link>{" "}
-          ring (using virtual nodes), replicates each row to <strong>RF</strong> nodes, and lets you tune consistency{" "}
-          <em>per query</em>. Storage is an <Link href="/concepts/lsm-vs-btree" className="text-sky-400 hover:text-sky-300">LSM-tree</Link>,
-          which is why writes are so cheap.
+          Cassandra is a <strong>distributed wide-column database</strong> — picture a table where every row can have
+          its own set of columns, spread across many machines by design.
+        </p>
+        <p>
+          It&rsquo;s <strong>masterless</strong> (also called peer-to-peer): every node is equal, there&rsquo;s no
+          single leader that could fail, and a client can send a write to any node in the cluster.
+        </p>
+        <p>
+          Data is spread across the cluster using{" "}
+          <Link href="/concepts/consistent-hashing" className="text-sky-400 hover:text-sky-300">consistent hashing</Link>{" "}
+          (with virtual nodes to spread the load more evenly) — each row lands on whichever node owns that part of the
+          hash space, and is copied to <strong>RF</strong> (replication factor) nodes total, not just one, so losing a
+          single node never loses data.
+        </p>
+        <p>
+          Storage is built on an{" "}
+          <Link href="/concepts/lsm-vs-btree" className="text-sky-400 hover:text-sky-300">LSM-tree</Link> (log-structured
+          merge-tree) — a structure optimised to make writes extremely cheap, which is the main reason Cassandra can
+          absorb so much write traffic.
         </p>
       </Section>
 
       <Section title="2. Tunable consistency (its signature)">
         <p>
-          Cassandra doesn&rsquo;t force one consistency level on you. Each query picks how many replicas must respond —
-          <code> ONE</code>, <code>QUORUM</code>, <code>ALL</code> — for reads (R) and writes (W) independently. The rule
-          that matters: when <strong>R + W &gt; N</strong>, the read and write quorums overlap, so a read is guaranteed to
-          see the latest write (strong consistency). Below that, reads can be stale (eventual). Try it:
+          Cassandra doesn&rsquo;t force one consistency level on every query — you choose, per query, how many
+          replicas must respond before it counts as done: <code>ONE</code>, <code>QUORUM</code> (a majority), or{" "}
+          <code>ALL</code>. You set this separately for reads (<strong>R</strong>) and writes (<strong>W</strong>).
+        </p>
+        <p>
+          The rule that matters: when <strong>R + W &gt; N</strong> (N being the total number of replicas), the set of
+          replicas you read from and the set you wrote to are guaranteed to overlap by at least one node — so a read
+          is guaranteed to see the latest write. That&rsquo;s strong consistency. Pick R and W so they don&rsquo;t
+          overlap, and reads can come back stale (eventual consistency) — but faster, since fewer replicas need to
+          respond. Try it:
         </p>
         <CassandraQuorumViz />
       </Section>
 
       <Section title="3. How a write works">
-        <p>
-          A write goes to a <strong>coordinator</strong> (any node), which forwards it to the RF replicas. Each replica
-          appends to its <strong>commit log</strong> and an in-memory <strong>memtable</strong>, which later flushes to an
-          immutable <strong>SSTable</strong>; background <strong>compaction</strong> merges SSTables. Because every write
-          is a sequential append — never an in-place update — Cassandra absorbs huge write volume. Missed replicas are
-          repaired later via <strong>hinted handoff</strong>, <strong>read repair</strong>, and anti-entropy.
-        </p>
+        <ol className="list-decimal space-y-1 pl-5">
+          <li>The client sends the write to any node. That node becomes the <strong>coordinator</strong> for this one request and forwards it to the RF replicas that actually own the row.</li>
+          <li>Each replica writes it twice, fast: first to a <strong>commit log</strong> on disk (so it survives a crash), then into an in-memory table called a <strong>memtable</strong>.</li>
+          <li>Later, a full memtable gets flushed to disk as an immutable file called an <strong>SSTable</strong>. Nothing is ever edited in place — everything is just appended — which is exactly why writes are so cheap.</li>
+          <li>A background process called <strong>compaction</strong> periodically merges old SSTables together and throws away data that&rsquo;s been overwritten or deleted.</li>
+          <li>If a replica missed the write (it was down, say), Cassandra catches it up later via <strong>hinted handoff</strong>, <strong>read repair</strong>, and <strong>anti-entropy</strong> — three different mechanisms aimed at the same goal: every replica eventually agreeing.</li>
+        </ol>
       </Section>
 
       <Section title="4. Data modelling — query first">
         <p>
-          Cassandra has <strong>no joins and no ad-hoc queries</strong>. You model tables around the exact queries you
-          need: a <strong>partition key</strong> decides which node owns the row, and <strong>clustering columns</strong>{" "}
-          sort rows within a partition. Denormalize freely and duplicate data across tables — storage is cheap, and each
-          query must hit a single partition to stay fast.
+          Cassandra has <strong>no joins and no ad-hoc queries</strong> — you design each table around one specific
+          query you need to run fast, not around the data&rsquo;s natural shape. The <strong>partition key</strong>{" "}
+          decides which node owns a row; the <strong>clustering columns</strong> decide the order rows are stored in
+          within that partition. It&rsquo;s normal — even expected — to duplicate the same data across several
+          tables shaped for different queries, since storage is cheap and every query needs to hit a single partition
+          to stay fast.
         </p>
       </Section>
 
       <Section title="5. When to use it">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Write-heavy workloads: time-series, event logs, metrics, messaging, feeds.</li>
-          <li>Always-on services that need to survive a node or datacenter loss with no failover step.</li>
-          <li>Predictable, query-driven access patterns — not exploratory analytics or complex joins.</li>
+          <li>Write-heavy workloads: time-series data, event logs, metrics, messaging, activity feeds.</li>
+          <li>Always-on services that need to survive losing a node — or a whole datacenter — without a manual failover step.</li>
+          <li>Access patterns you already know in advance — not exploratory analytics or queries with complex joins.</li>
         </ul>
       </Section>
 
       <Section title="6. Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li>No joins, no referential integrity, and only limited transactions (lightweight transactions use Paxos for compare-and-set — and they&rsquo;re slow).</li>
-          <li>Eventual consistency by default; you must reason about R/W/N to get read-your-writes.</li>
-          <li>Bad data models (large or hot partitions) hurt badly — the schema is dictated by queries, decided up front.</li>
-          <li>Compaction and repair are real operational overhead.</li>
+          <li>No joins, no referential integrity, and only limited transaction support (lightweight transactions use Paxos for compare-and-set — correct, but noticeably slower than a normal write).</li>
+          <li>Eventually consistent by default — you have to deliberately choose your R/W consistency levels to guarantee reading your own writes.</li>
+          <li>A bad data model (oversized or unevenly hot partitions) hurts badly, and the schema is dictated by your queries up front — hard to change later.</li>
+          <li>Compaction and repair are real, ongoing operational work, not a one-time setup cost.</li>
         </ul>
+      </Section>
+
+      <Section title="How to use it">
+        <p>Model a table around the one query it needs to serve, and tune consistency per query with CQL (Cassandra Query Language):</p>
+        <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">
+{`CREATE KEYSPACE shop
+  WITH replication = {'class': 'NetworkTopologyStrategy', 'datacenter1': 3};
+
+CREATE TABLE shop.orders_by_user (
+  user_id   uuid,
+  order_id  timeuuid,
+  total     decimal,
+  PRIMARY KEY (user_id, order_id)   -- user_id = partition key, order_id = clustering column
+) WITH CLUSTERING ORDER BY (order_id DESC);
+
+CONSISTENCY QUORUM;                 -- require a majority of RF replicas to agree
+SELECT * FROM shop.orders_by_user WHERE user_id = ?;`}
+        </pre>
+        <p>
+          The partition key (<code>user_id</code>) decides which node owns the data; the clustering column (
+          <code>order_id</code>) decides the on-disk order within that partition — so &ldquo;latest orders for this
+          user&rdquo; is a single, fast, single-partition read.
+        </p>
       </Section>
 
       <Section title="Related">

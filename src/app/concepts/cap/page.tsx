@@ -36,78 +36,92 @@ export default function CapPage() {
         </span>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50">CAP Theorem</h1>
         <p className="mt-2 text-slate-400">
-          When the network partitions, a distributed system must choose consistency or availability — not both.
+          When part of the network breaks and servers can&rsquo;t reach each other, a distributed system has to
+          choose: stay correct, or stay available. It can&rsquo;t fully do both at the same time.
         </p>
       </header>
 
       <Section title="Definition">
         <p>
-          CAP says a distributed data store can provide at most two of three: <strong>Consistency</strong> (every read
-          sees the latest write), <strong>Availability</strong> (every request gets a non-error response), and{" "}
-          <strong>Partition tolerance</strong> (it keeps working despite dropped messages between nodes). Since network
-          partitions <em>will</em> happen, the real choice during a partition is <strong>C vs A</strong>.
+          A distributed data store is one that keeps copies of your data on more than one server. CAP says that
+          store can give you at most two of these three guarantees at the same time:
+        </p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li><strong>Consistency</strong>: every read gets back the most recent write — never a stale answer.</li>
+          <li><strong>Availability</strong>: every request gets a response, even if it&rsquo;s not instant.</li>
+          <li><strong>Partition tolerance</strong>: the system keeps working even when some servers can&rsquo;t talk to each other over the network.</li>
+        </ul>
+        <p>
+          Network partitions (servers losing the ability to talk to each other) really do happen, so partition
+          tolerance isn&rsquo;t something you can opt out of. That means the real choice you face, once a partition
+          happens, is <strong>Consistency vs Availability</strong> — &ldquo;C vs A.&rdquo;
         </p>
       </Section>
 
       <Section title="The problem it captures">
         <p>
-          When two replicas can&rsquo;t talk, and a write lands on one of them, the other is now behind. You either
-          serve that stale replica anyway (available, inconsistent) or refuse to serve it until it catches up
-          (consistent, unavailable). There is no third option while the partition lasts.
+          Say two copies of your data (two replicas) can no longer talk to each other, and a write lands on one of
+          them. The other replica is now out of date. You have exactly two choices: keep answering reads from the
+          out-of-date replica anyway (available, but wrong), or refuse to answer until it catches up (correct, but
+          unavailable). There is no third option while the two replicas can&rsquo;t communicate.
         </p>
       </Section>
 
       <Section title="Try it">
         <p>
-          Hit <strong>Partition network</strong>, pick <strong>AP</strong> or <strong>CP</strong>, then write to A and
-          read from B. In AP the read stays available but goes stale; in CP the read is rejected to protect
-          consistency. Heal the network and both come back.
+          Click <strong>Partition network</strong> to cut the connection between servers A and B. Pick{" "}
+          <strong>AP</strong> (favour <strong>Availability</strong>) or <strong>CP</strong> (favour{" "}
+          <strong>Consistency</strong>), then write to A and read from B. In AP mode, B still answers — but with
+          stale data. In CP mode, B refuses to answer rather than risk returning the wrong value. Heal the network
+          and both modes catch back up.
         </p>
         <CapViz />
       </Section>
 
       <Section title="Analogy">
         <p>
-          Two shop tills that normally share one price list. The link goes down and head office changes a price at Till
-          A. Till B can either keep selling at the old price (open for business, but wrong) or stop selling that item
-          until the link is back (correct, but closed).
+          Two shop tills that normally share one price list. The link between them goes down, and head office
+          changes a price at till A. Till B can either keep selling at the old price (open for business, but wrong)
+          or stop selling that item until the link is back (correct, but closed).
         </p>
       </Section>
 
       <Section title="Where it&rsquo;s used">
         <p>
-          <strong>AP</strong> systems: DynamoDB, Cassandra, and read-replica reads (see{" "}
-          <Link href="/concepts/base" className="text-sky-400 hover:text-sky-300">BASE</Link>).{" "}
-          <strong>CP</strong> systems: etcd, ZooKeeper, and quorum-based databases that refuse writes without a majority
-          (see <Link href="/concepts/acid" className="text-sky-400 hover:text-sky-300">ACID</Link>).
+          <strong>AP</strong> systems (favour availability): DynamoDB, Cassandra, and reading from a read replica
+          (see <Link href="/concepts/base" className="text-sky-400 hover:text-sky-300">BASE</Link>).{" "}
+          <strong>CP</strong> systems (favour consistency): etcd, ZooKeeper, and quorum-based databases that refuse a
+          write unless a majority of servers confirm it.
         </p>
       </Section>
 
       <Section title="How to implement">
         <ul className="list-disc space-y-1 pl-5">
-          <li>You don&rsquo;t code CAP — you choose it per system, or even per operation.</li>
-          <li>Pick a CP store (etcd, ZooKeeper, HBase) when correctness must win; an AP store (DynamoDB, Cassandra) when availability must.</li>
+          <li>You don&rsquo;t write code to implement CAP itself — you choose a CP store or an AP store, sometimes per operation.</li>
+          <li>Pick a CP store (etcd, ZooKeeper, HBase) when correctness matters more than uptime; pick an AP store (DynamoDB, Cassandra) when uptime matters more than always having the very latest data.</li>
           <li>
-            With tunable stores, set consistency levels: strong when <code>R + W &gt; N</code> (e.g. QUORUM reads and
-            writes); maximum availability at <code>W=1, R=1</code>.
+            Some databases let you tune this per request using three numbers: <code>N</code> = how many replicas
+            hold the data, <code>W</code> = how many replicas must confirm a write, <code>R</code> = how many
+            replicas you read from. You get strong consistency when <code>W + R &gt; N</code> (a &ldquo;quorum&rdquo;
+            read/write); you get maximum availability at <code>W = 1, R = 1</code>.
           </li>
-          <li>Give specific flows read-your-writes by routing them to the primary or using session consistency.</li>
+          <li>For specific flows that must see their own writes immediately, route those reads to the primary, or use session consistency.</li>
         </ul>
       </Section>
 
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
           <li><strong>CP</strong>: correct, but rejects requests during a partition — lower availability.</li>
-          <li><strong>AP</strong>: always answers, but reads can be stale and you must resolve conflicts (last-write-wins, vector clocks, CRDTs).</li>
-          <li><strong>PACELC</strong>: even with no partition, synchronous replication trades latency for consistency.</li>
+          <li><strong>AP</strong>: always answers, but reads can be stale, and you have to resolve conflicts somehow (last-write-wins, vector clocks, CRDTs).</li>
+          <li><strong>PACELC</strong> (an extension of CAP): even with no partition at all, synchronous replication still trades latency for consistency — <em>if</em> there&rsquo;s a <strong>P</strong>artition, choose <strong>A</strong>vailability or <strong>C</strong>onsistency; <strong>e</strong>lse, choose <strong>L</strong>atency or <strong>C</strong>onsistency.</li>
         </ul>
       </Section>
 
       <Section title="Common mistakes">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Thinking you &ldquo;pick two&rdquo; freely — partition tolerance isn&rsquo;t optional, so it&rsquo;s C vs A.</li>
-          <li>Believing a system is purely CP or AP — real systems tune it per operation (and PACELC adds latency vs consistency when there&rsquo;s no partition).</li>
-          <li>Assuming &ldquo;consistent&rdquo; means ACID — CAP&rsquo;s C is specifically linearizable reads.</li>
+          <li>Thinking you &ldquo;pick two of three&rdquo; freely — partition tolerance isn&rsquo;t optional in a real network, so the live choice is C vs A.</li>
+          <li>Believing a system is purely CP or AP — real systems tune it per operation, and PACELC shows the latency-vs-consistency trade-off still exists even with no partition.</li>
+          <li>Assuming &ldquo;consistent&rdquo; here means the same thing as ACID&rsquo;s &ldquo;C&rdquo; — CAP&rsquo;s Consistency specifically means every read sees the latest write (linearizability), which is a different guarantee from ACID.</li>
         </ul>
       </Section>
 

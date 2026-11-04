@@ -37,46 +37,55 @@ export default function TypeaheadPage() {
 
       <Section title="1. Business problem">
         <p>
-          Suggest completions as the user types, in under ~100ms, for millions of concurrent typers. The catch: every
-          keystroke is potentially a request, so a single search box can generate more queries than the rest of the site
-          combined. The whole architecture is about <strong>not doing real work most of the time</strong>.
+          Suggest completions as the user types — in under about 100 milliseconds — for millions of people typing at
+          once. The catch: every keystroke can trigger a request, so a single search box can generate more traffic
+          than the rest of the site combined. The whole architecture is really about{" "}
+          <strong>avoiding real work on most keystrokes</strong>.
         </p>
       </Section>
 
       <Section title="2. Two levers: debounce + cache">
         <p>
-          First, the client <strong>debounces</strong> — it waits for a short pause in typing before sending, collapsing
-          &ldquo;p&rdquo;, &ldquo;pi&rdquo;, &ldquo;piz&rdquo;, &ldquo;pizz&rdquo;, &ldquo;pizza&rdquo; into one or two
-          requests. Second, the server keeps a <strong>prefix cache</strong>: popular prefixes (&ldquo;piz&rdquo; →
-          top 10 suggestions) are the same for everyone, so they&rsquo;re cached with a very high hit rate. Only a cache
-          miss reaches the search index.
+          First, the client <strong>debounces</strong> — instead of sending a request on every single keystroke, it
+          waits for a short pause in typing before sending one. That collapses &ldquo;p&rdquo;, &ldquo;pi&rdquo;,
+          &ldquo;piz&rdquo;, &ldquo;pizz&rdquo;, &ldquo;pizza&rdquo; into just one or two requests instead of five.
+        </p>
+        <p>
+          Second, the server keeps a <strong>prefix cache</strong> — a cache keyed by whatever has been typed so far.
+          A popular prefix like &ldquo;piz&rdquo; returns the same top-10 suggestions for every user, so it&rsquo;s
+          cached once and reused constantly, giving a very high hit rate. Only a cache miss ever reaches the full
+          search index.
         </p>
       </Section>
 
       <Section title="3. Interactive simulation">
         <p>
-          Keystrokes → API Gateway → Autocomplete Service → <strong>Prefix Cache</strong> → Search Index. Because
-          popular prefixes repeat across users, ~90% of queries are cache hits served in a millisecond; only the long
-          tail hits the (trie / inverted-index) search backend. Push the keystroke rate up and watch the cache soak it.
+          Keystrokes → <strong>API Gateway</strong> (a single front door that routes each request to the right
+          backend service) → Autocomplete Service → <strong>Prefix Cache</strong> → Search Index. Because popular
+          prefixes repeat across users, most queries are cache hits served in under a millisecond — only the long
+          tail of rare prefixes reaches the (trie / inverted-index) search backend. Push the keystroke rate up below
+          and watch the cache absorb it.
         </p>
         <EmbeddedSim blueprint={arch.blueprint} />
       </Section>
 
       <Section title="4. How the suggestions are built">
         <p>
-          The index is usually a <strong>trie</strong> (prefix tree) where each node stores the top-K completions for
-          that prefix, so a lookup is a short walk down the tree — no ranking at query time. It&rsquo;s rebuilt offline
-          from search logs (weighted by popularity), then loaded into memory. That&rsquo;s why suggestions feel instant:
-          the ranking work happened hours ago, not on your keystroke.
+          The index is usually a <strong>trie</strong> (a tree where every path from the root spells out a prefix,
+          one letter at a time), where each node already stores the top-K completions for that prefix. That means a
+          lookup is just a short walk down the tree — no ranking happens at query time. The trie is rebuilt offline
+          from search logs (weighted by how often each suggestion gets picked), then loaded fully into memory.
+          That&rsquo;s why suggestions feel instant: the actual ranking work happened hours earlier, not on your
+          keystroke.
         </p>
       </Section>
 
       <Section title="5. Key decisions">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Debounce on the client to cut request volume at the source.</li>
-          <li>Cache by prefix — popular prefixes are shared across all users, so hit rates are very high.</li>
-          <li>Precompute top-K per prefix offline (a trie) so query time is a lookup, not a search.</li>
-          <li>Serve stale-but-fast: a slightly out-of-date suggestion list is fine.</li>
+          <li>Debounce on the client to cut request volume before it ever reaches the server.</li>
+          <li>Cache by prefix — popular prefixes are shared across all users, so a small cache serves a huge share of traffic.</li>
+          <li>Precompute the top-K suggestions per prefix offline (in a trie), so query time is a lookup, not a live search.</li>
+          <li>Serve stale-but-fast: a suggestion list that&rsquo;s a few hours out of date is a fine trade for an instant response.</li>
         </ul>
       </Section>
 

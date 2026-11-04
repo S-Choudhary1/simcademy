@@ -31,46 +31,94 @@ export default function LsmBtreePage() {
         <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-0.5 text-xs font-medium text-fuchsia-300">Concept</span>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50">LSM-tree vs B-tree</h1>
         <p className="mt-2 text-slate-400">
-          The two families of storage engine behind almost every database — one tuned for writes, one for reads. The
-          choice shapes how a database behaves under load.
+          Two very different designs for how a database stores data on disk — one optimized for writing fast, one for
+          reading fast. Which one your database uses changes how it behaves under heavy load.
         </p>
       </header>
 
-      <Section title="Two philosophies">
+      <Section title="Definition">
         <p>
-          A <strong>B-tree</strong> keeps every key in one sorted place and updates it <em>in place</em>: a write finds
-          the leaf page and rewrites it (random I/O). An <strong>LSM-tree</strong> never updates in place — writes are
-          <em> appended</em> to an in-memory <strong>memtable</strong> that is periodically flushed to an immutable
-          <strong> SSTable</strong> on disk, and background <strong>compaction</strong> merges those files.
+          Every database has to decide how it stores and finds data on disk. There are two popular designs.
+        </p>
+        <p>
+          A <strong>B-tree</strong> keeps every key in one sorted structure and updates it <em>in place</em>: when you
+          write a value, the database finds the exact page on disk and rewrites it right there.
+        </p>
+        <p>
+          An <strong>LSM-tree</strong> (Log-Structured Merge-tree) never updates in place. Every write is{" "}
+          <em>appended</em> to a small in-memory structure called a <strong>memtable</strong>. Once that fills up, it&rsquo;s
+          flushed to disk as a new, unchangeable file called an <strong>SSTable</strong>. A background process called{" "}
+          <strong>compaction</strong> later merges old SSTables together and discards outdated values.
+        </p>
+      </Section>
+
+      <Section title="The problem it solves">
+        <p>
+          Both designs solve the same problem — store data so you can find it again quickly — but they make opposite
+          bets. A B-tree bets you&rsquo;ll read far more than you write, so it keeps everything in one tidy, searchable
+          place even if that makes each write a little more expensive. An LSM-tree bets you&rsquo;re writing constantly,
+          so it makes writes nearly free (just append) and pays the cost later, in the background, when it reads or
+          compacts.
         </p>
       </Section>
 
       <Section title="Try it">
         <p>
-          Write keys and watch them append to the LSM memtable (which flushes to SSTables when full) while the B-tree
-          slots each into its leaf. Then read the oldest key: the LSM may scan the memtable plus several SSTables to find
-          it, while the B-tree walks a single path.
+          Write some keys and watch them land in the LSM <strong>memtable</strong>, which flushes to a new SSTable once
+          it&rsquo;s full, while the B-tree slots each key straight into its sorted leaf. Now read the oldest key you
+          wrote: the LSM-tree may have to check the memtable and several SSTables before finding it, while the B-tree
+          just walks one path straight to the answer.
         </p>
         <LsmBtreeViz />
       </Section>
 
-      <Section title="The trade-off">
+      <Section title="Analogy">
+        <p>
+          Think about organizing a bookshelf. A B-tree is like keeping every book in its exact alphabetical spot —
+          looking any book up is instant, but adding one sometimes means shifting several neighbors over to make
+          room. An LSM-tree is like dropping new books onto the top of a pile as they arrive, and only alphabetizing
+          in batches later, overnight. Adding a book is instant; finding one means checking the pile first, then the
+          alphabetized shelves.
+        </p>
+      </Section>
+
+      <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li><strong>LSM wins on writes</strong> — sequential appends absorb enormous write throughput, and there&rsquo;s no in-place page churn.</li>
-          <li><strong>B-tree wins on reads</strong> — a key lives in exactly one place, so point and range reads take one path.</li>
-          <li><strong>LSM read cost</strong> — a key may be spread across many SSTables; <strong>bloom filters</strong> (skip files that can&rsquo;t contain the key) and <strong>compaction</strong> keep it manageable, at the cost of extra background I/O and space.</li>
-          <li><strong>B-tree write cost</strong> — random I/O plus a write-ahead log; updates cause write amplification.</li>
+          <li><strong>LSM-trees are faster to write to</strong> — appending in memory, then sequentially to disk, is about as cheap as writing gets, since there&rsquo;s no existing page to find and rewrite.</li>
+          <li><strong>B-trees are faster to read from</strong> — a key lives in exactly one place, so both a single lookup and a range of keys take one direct path.</li>
+          <li><strong>LSM-tree reads pay a cost</strong>: a key could be sitting in the memtable or in any of several SSTables. <strong>Bloom filters</strong> (a small structure that quickly rules out files that definitely don&rsquo;t contain a key) and background compaction keep this manageable, at the cost of extra disk I/O and space while compaction runs.</li>
+          <li><strong>B-tree writes pay a cost too</strong>: updating a page in place is random I/O, and the database still needs a write-ahead log for crash recovery. Frequent small updates to the same page cause <strong>write amplification</strong> — more bytes get written to disk than the size of your actual change.</li>
         </ul>
       </Section>
 
-      <Section title="Who uses which">
+      <Section title="Where it&rsquo;s used">
         <p>
-          <strong>LSM:</strong> Cassandra, ScyllaDB, RocksDB, LevelDB, HBase, and write-heavy time-series stores.{" "}
-          <strong>B-tree:</strong> PostgreSQL, MySQL/InnoDB, and MongoDB&rsquo;s WiredTiger engine — see{" "}
+          <strong>LSM-tree:</strong> Cassandra, ScyllaDB, RocksDB, LevelDB, HBase, and most write-heavy time-series
+          databases. <strong>B-tree family:</strong> PostgreSQL, MySQL/InnoDB, and MongoDB&rsquo;s WiredTiger engine.
+          In practice, almost all of these specifically implement the <strong>B⁺-tree</strong> variant — values live
+          only in linked leaf pages, never in the upper levels — see{" "}
           <Link href="/concepts/postgresql-indexing" className="text-sky-400 hover:text-sky-300">PostgreSQL indexing</Link>{" "}
-          and <Link href="/concepts/mongodb-indexing" className="text-sky-400 hover:text-sky-300">MongoDB indexing</Link>,
-          both B⁺-trees.
+          and <Link href="/concepts/mongodb-indexing" className="text-sky-400 hover:text-sky-300">MongoDB indexing</Link>{" "}
+          for exactly how that looks on real data.
         </p>
+      </Section>
+
+      <Section title="How to choose">
+        <ul className="list-disc space-y-1 pl-5">
+          <li>You don&rsquo;t usually build either structure yourself — pick a database engine that already uses one, or tune the engine you have.</li>
+          <li>Reach for an LSM-based store (Cassandra, RocksDB-backed systems) for write-heavy workloads like logging, metrics, or event ingestion.</li>
+          <li>Reach for a B-tree-based store (PostgreSQL, MySQL) when reads dominate and you need fast point lookups or range scans.</li>
+          <li>Stuck with an LSM-tree and reads matter? Tune compaction settings and make sure bloom filters are enabled — both directly cut down read cost.</li>
+          <li>Stuck with a B-tree and write throughput matters? Batch writes where you can and watch for index bloat from frequent updates.</li>
+        </ul>
+      </Section>
+
+      <Section title="Common mistakes">
+        <ul className="list-disc space-y-1 pl-5">
+          <li>Assuming &ldquo;NoSQL&rdquo; means LSM-tree, or vice versa — the storage engine and the data model are separate choices; MongoDB (a document database) uses a B⁺-tree, while some engines use LSM-trees underneath a SQL-like interface.</li>
+          <li>Benchmarking an LSM-tree store right after a big write burst, before compaction has run — reads look artificially slow because there are extra SSTables still waiting to be merged.</li>
+          <li>Picking a database purely on &ldquo;LSM vs B-tree&rdquo; in isolation — durability guarantees, replication, and query features usually matter more day-to-day than the storage engine alone.</li>
+        </ul>
       </Section>
 
       <Section title="Related">

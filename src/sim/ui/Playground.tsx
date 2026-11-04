@@ -153,13 +153,15 @@ function PlaygroundInner({ blueprint, showPalette }: { blueprint: Blueprint; sho
           >
             <Background color="#1e293b" gap={22} size={1} />
             <Controls showInteractive={false} className="!bg-slate-900 !text-slate-200" />
-            <MiniMap
-              pannable
-              zoomable
-              nodeColor="#334155"
-              maskColor="rgba(2,6,23,0.6)"
-              className="!bg-slate-900"
-            />
+            {showPalette ? (
+              <MiniMap
+                pannable
+                zoomable
+                nodeColor="#334155"
+                maskColor="rgba(2,6,23,0.6)"
+                className="!bg-slate-900"
+              />
+            ) : null}
           </ReactFlow>
         </div>
         <Inspector />

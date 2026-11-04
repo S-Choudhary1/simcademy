@@ -35,73 +35,90 @@ export default function CircuitBreakerPage() {
         </span>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50">Circuit Breaker</h1>
         <p className="mt-2 text-slate-400">
-          Stop hammering a failing dependency — fail fast, then probe to recover.
+          Stop hammering a dependency that&rsquo;s already failing — fail fast instead, then probe it to see if it has
+          recovered.
         </p>
       </header>
 
       <Section title="Definition">
         <p>
-          A circuit breaker wraps calls to a dependency and tracks failures. It has three states:{" "}
-          <strong className="text-emerald-300">CLOSED</strong> (calls pass through),{" "}
-          <strong className="text-red-300">OPEN</strong> (calls fail instantly without touching the dependency), and{" "}
-          <strong className="text-amber-300">HALF-OPEN</strong> (a single probe decides whether to recover). Too many
-          failures trip it open; a successful probe closes it again.
+          A circuit breaker sits in front of a call to another service (a &ldquo;dependency&rdquo;) and keeps track of
+          how often that call fails. It has three states:
         </p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li><strong className="text-emerald-300">CLOSED</strong>: normal operation — every call goes through to the dependency.</li>
+          <li><strong className="text-red-300">OPEN</strong>: the dependency looks unhealthy — calls fail instantly, without even trying to reach it.</li>
+          <li><strong className="text-amber-300">HALF-OPEN</strong>: recovering — exactly one test call decides whether to go back to normal.</li>
+        </ul>
+        <p>Enough failures in a row trip it from CLOSED to OPEN; a successful test call in HALF-OPEN closes it again.</p>
       </Section>
 
       <Section title="The problem it solves">
         <p>
-          When a dependency is down, naive retries pile up — threads block, queues fill, and the failure cascades to
-          callers. A breaker converts slow, cascading failure into fast, contained failure, and gives the dependency
-          room to recover instead of being hammered.
+          When a dependency goes down, code that keeps retrying it anyway makes things worse: threads pile up waiting
+          for a response, queues fill, and the one failing dependency drags down everything that calls it. A circuit
+          breaker turns that slow, spreading failure into a fast, contained one — and gives the dependency room to
+          recover instead of getting hit with more traffic while it&rsquo;s already struggling.
         </p>
       </Section>
 
       <Section title="Try it">
         <p>
-          Flip the dependency to <span className="text-red-300">Failing</span>. After a few failures the breaker trips{" "}
-          <span className="text-red-300">OPEN</span> and rejects instantly. Flip it back to{" "}
-          <span className="text-emerald-300">Healthy</span> and watch it probe through{" "}
-          <span className="text-amber-300">HALF-OPEN</span> and recover.
+          Flip the dependency to <span className="text-red-300">Failing</span>. After a few failures, the breaker
+          trips <span className="text-red-300">OPEN</span> and starts rejecting calls instantly. Flip the dependency
+          back to <span className="text-emerald-300">Healthy</span> and watch the breaker probe it through{" "}
+          <span className="text-amber-300">HALF-OPEN</span> before fully recovering.
         </p>
         <CircuitBreakerViz />
       </Section>
 
       <Section title="Analogy">
         <p>
-          An electrical breaker in your home. When there&rsquo;s a fault it trips and cuts the circuit instantly, rather
-          than letting current keep flowing and start a fire. You reset it once the fault is fixed.
+          An electrical breaker in your home. When there&rsquo;s a fault, it trips and cuts the circuit instantly,
+          rather than letting current keep flowing and start a fire. You reset it once the fault is fixed.
         </p>
       </Section>
 
       <Section title="Where it&rsquo;s used">
         <p>
-          Service-to-service calls in microservices, via libraries like Resilience4j, Polly, and service meshes
-          (Istio/Envoy). Almost always paired with timeouts, retries with backoff, and bulkheads.
+          Service-to-service calls in microservices, via libraries like Resilience4j and Polly, and in service meshes
+          like Istio/Envoy. It&rsquo;s almost always paired with timeouts, retries with backoff, and bulkheads
+          (limiting how many concurrent calls one dependency can use).
         </p>
       </Section>
 
       <Section title="How to implement">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Wrap the call; count failures over a rolling window; trip to OPEN at a threshold.</li>
-          <li>After a cooldown, move to HALF-OPEN and allow one probe — success closes it, failure re-opens it.</li>
-          <li>Use a library (Resilience4j, Polly, Hystrix) or a service mesh (Envoy/Istio) rather than hand-rolling.</li>
-          <li>Always pair with a <strong>timeout</strong> (so a hang counts as a failure) and a <strong>fallback</strong>.</li>
+          <li>Wrap the call; count failures over a rolling window of recent calls; trip to OPEN once failures cross a threshold.</li>
+          <li>After a cooldown period, move to HALF-OPEN and allow exactly one test call through — success closes the breaker, failure sends it back to OPEN.</li>
+          <li>Use an existing library (Resilience4j, Polly) or a service mesh (Envoy/Istio) instead of hand-rolling the state machine.</li>
         </ul>
+        <p>For example, Resilience4j lets you configure those thresholds directly:</p>
+        <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">
+{`CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+    .failureRateThreshold(50)                          // trip OPEN at 50% failures
+    .slidingWindowSize(10)                             // measured over the last 10 calls
+    .waitDurationInOpenState(Duration.ofSeconds(30))   // stay OPEN this long before probing
+    .build();`}
+        </pre>
+        <p>
+          Always pair it with a <strong>timeout</strong> (so a hang counts as a failure instead of waiting forever)
+          and a <strong>fallback</strong> (so failing fast still returns something useful to the caller).
+        </p>
       </Section>
 
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Fast, contained failure and room for the dependency to recover vs the tuning problem: too sensitive trips on blips, too lax never protects.</li>
-          <li>Needs a meaningful fallback — failing fast with no degraded response still breaks the user.</li>
-          <li>Adds state and one more thing to observe per dependency.</li>
+          <li>Fast, contained failure and recovery room for the dependency vs a tuning problem: too sensitive trips on harmless blips, too lax never protects anything.</li>
+          <li>Needs a meaningful fallback — failing fast with no degraded response still breaks the user&rsquo;s experience.</li>
+          <li>Adds one more piece of state, per dependency, that you need to monitor.</li>
         </ul>
       </Section>
 
       <Section title="Common mistakes">
         <ul className="list-disc space-y-1 pl-5">
-          <li>No timeout — the breaker can&rsquo;t detect a hang if the call never returns.</li>
-          <li>Thresholds too sensitive (trips on blips) or too lax (never protects).</li>
+          <li>No timeout — the breaker can&rsquo;t detect a hang if the call never returns in the first place.</li>
+          <li>Thresholds set too sensitive (trips on blips) or too lax (never actually protects anything).</li>
           <li>No fallback — failing fast with no degraded response still breaks the user experience.</li>
         </ul>
       </Section>

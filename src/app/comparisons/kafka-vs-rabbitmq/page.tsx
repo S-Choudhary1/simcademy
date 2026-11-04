@@ -28,16 +28,20 @@ export default function KafkaVsRabbitMqPage() {
       />
 
       <Lede>
-        Both decouple producers from consumers, so they get lumped together — but they&rsquo;re built on opposite ideas.
-        Kafka <em>keeps</em> messages and lets many readers stream the same history; RabbitMQ <em>delivers</em> a message
-        to a consumer and deletes it. Almost every difference below falls out of that one distinction.
+        Both sit between the thing sending a message and the thing receiving it, so neither side has to wait on the
+        other — that&rsquo;s why people lump them together. But they&rsquo;re built on opposite ideas. Kafka{" "}
+        <em>keeps</em> every message and lets many readers replay the same history; RabbitMQ <em>delivers</em> a
+        message to one consumer and then deletes it. Almost every difference below falls out of that one distinction.
       </Lede>
 
       <Callout>
-        <A href="/technologies/kafka">Kafka</A> is a <strong>distributed commit log</strong>: messages are appended and
-        retained, and independent consumer groups replay the stream from any offset. <A href="/technologies/rabbitmq">RabbitMQ</A>{" "}
-        is a <strong>smart broker</strong>: an exchange routes each message into queues, a consumer acknowledges it, and
-        it&rsquo;s removed. Kafka optimizes for throughput and replay; RabbitMQ for flexible routing and once-only delivery.
+        <A href="/technologies/kafka">Kafka</A> is a <strong>distributed commit log</strong>: messages are appended
+        and kept around, and independent consumer groups can replay the stream from any point (its <strong>offset</strong>).{" "}
+        <A href="/technologies/rabbitmq">RabbitMQ</A> is a <strong>smart broker</strong>: a component called an{" "}
+        <strong>exchange</strong> routes each message into one or more queues, a consumer confirms (&ldquo;acks&rdquo;)
+        it, and it&rsquo;s removed. Kafka optimizes for throughput and replay; RabbitMQ optimizes for flexible routing
+        and handing each message to one consumer at a time — though like most brokers, its default guarantee is{" "}
+        <A href="/concepts/delivery-semantics">at-least-once</A>, so a redelivered message can occasionally arrive twice.
       </Callout>
 
       <H2 id="simulation">See them run</H2>
@@ -55,10 +59,12 @@ export default function KafkaVsRabbitMqPage() {
 
       <H2 id="throughput">Throughput &amp; latency</H2>
       <P>
-        Kafka is built for <strong>throughput</strong>: sequential writes to a log and zero-copy reads let one cluster
-        move millions of messages a second. RabbitMQ gives you <strong>low per-message latency</strong> and per-message
-        acknowledgement, but its routing and ack bookkeeping cap raw throughput below Kafka&rsquo;s. If the stream itself
-        is the product, that ceiling matters; for task queues, it rarely does.
+        Kafka is built for <strong>throughput</strong>: it writes to the log sequentially and reads with a &ldquo;zero-copy&rdquo;
+        trick (sending bytes straight from the disk cache to the network, instead of copying them through the
+        application first). That combination lets one cluster move millions of messages a second. RabbitMQ gives you{" "}
+        <strong>low per-message latency</strong> and per-message acknowledgement, but its routing logic and ack
+        bookkeeping cap its raw throughput below Kafka&rsquo;s. If the stream itself is the product, that ceiling
+        matters; for everyday task queues, it rarely does.
       </P>
 
       <PullQuote>Kafka keeps the story so anyone can re-read it. RabbitMQ hands each task to one worker and moves on.</PullQuote>

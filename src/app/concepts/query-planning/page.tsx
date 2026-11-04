@@ -31,74 +31,97 @@ export default function QueryPlanningPage() {
         <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-0.5 text-xs font-medium text-fuchsia-300">Concept</span>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50">Query Planning &amp; Joins</h1>
         <p className="mt-2 text-slate-400">
-          You write <em>what</em> you want; the database decides <em>how</em> to get it. Which index to use, whether to
-          scan or seek, and how to join — shown side by side for PostgreSQL and MongoDB, because they differ.
+          You write <em>what</em> data you want; the database decides <em>how</em> to go get it — which index to use,
+          whether to scan or seek, and how to join. Shown side by side for PostgreSQL and MongoDB, because they
+          decide this differently.
         </p>
       </header>
 
       <Section title="The flow: parse → plan → execute">
         <p>
-          A query goes through three stages. <strong>Parse</strong> turns the text into a tree. <strong>Plan</strong> is
-          where the optimizer picks a strategy: which index (if any), a full scan versus an index scan, and — when more
-          than one table is involved — a join algorithm. <strong>Execute</strong> runs the chosen plan and streams rows
-          back. The interesting decisions all happen in <em>plan</em>, and they hinge on one thing: <strong>how many rows
-          the query is expected to touch</strong>.
+          Every query goes through three stages. <strong>Parse</strong> turns your query text into a structure the
+          database can work with. <strong>Plan</strong> is where the optimizer decides the strategy: which index (if
+          any) to use, whether to scan the whole table or seek with an index, and — if more than one table or
+          collection is involved — which join algorithm to run. <strong>Execute</strong> then runs that chosen plan
+          and streams the results back to you.
+        </p>
+        <p>
+          Almost all the interesting decisions happen in the <em>plan</em> stage, and they come down to one question:{" "}
+          <strong>how many rows (or documents) is this query expected to touch?</strong>
+        </p>
+      </Section>
+
+      <Section title="Analogy">
+        <p>
+          It&rsquo;s a GPS app. You type in a destination (your query) and the app decides the actual route (the
+          plan) — a quick residential shortcut if traffic is light, or the highway if it isn&rsquo;t. You never
+          choose the turn-by-turn directions yourself; the planner picks them based on current conditions, the same
+          way a database planner picks a scan or an index based on how much data is involved.
         </p>
       </Section>
 
       <Section title="Try it">
         <p>
           Switch between <strong>PostgreSQL</strong> and <strong>MongoDB</strong>, then explore the three tabs.{" "}
-          <strong>Index types</strong> — pick a query pattern and see which index serves it. <strong>Planner</strong> —
-          change the table size and how many rows match, and watch the planner flip between a full scan and an index
-          scan. <strong>Joins</strong> — run a nested-loop, hash, or merge join (Postgres) or a <code>$lookup</code>{" "}
-          (Mongo) and watch rows match step by step.
+          <strong>Index types</strong> — pick a query pattern and see which index would serve it.{" "}
+          <strong>Planner</strong> — change the table size and how many rows match, and watch the planner flip
+          between a full scan and an index scan. <strong>Joins</strong> — run a nested-loop, hash, or merge join
+          (Postgres) or a <code>$lookup</code> (Mongo) and watch rows match up step by step.
         </p>
         <QueryPlanningViz />
       </Section>
 
       <Section title="Index types differ by database">
         <p>
-          <strong>PostgreSQL</strong> defaults to a <strong>B-tree</strong> (equality, range, sort, prefix) and adds
-          specialized access methods: <strong>Hash</strong> for equality, <strong>GIN</strong> for arrays / jsonb /
-          full-text, <strong>GiST</strong> for geometry and ranges, and <strong>BRIN</strong> for huge naturally-ordered
-          tables.
+          <strong>PostgreSQL</strong> defaults to a <strong>B-tree</strong> index (good for equality, range, sort,
+          and prefix searches — technically a B⁺-tree, see{" "}
+          <Link href="/concepts/postgresql-indexing" className="text-sky-400 hover:text-sky-300">PostgreSQL indexing</Link>)
+          and adds specialized types on top: <strong>Hash</strong> for plain equality, <strong>GIN</strong> for
+          arrays, jsonb, and full-text search, <strong>GiST</strong> for geometry and ranges, and{" "}
+          <strong>BRIN</strong> for huge, naturally-ordered tables (like an events table sorted by time).
         </p>
         <p>
-          <strong>MongoDB</strong> indexes are B-trees too, but the flavors map to document shapes:{" "}
-          <strong>single-field</strong> and <strong>compound</strong> (mind the <em>ESR</em> rule — Equality, Sort,
-          Range — for column order), <strong>multikey</strong> (created automatically over array fields),{" "}
-          <strong>text</strong>, <strong>2dsphere</strong> for geo, and <strong>hashed</strong> for shard-key
-          distribution.
+          <strong>MongoDB</strong> indexes are built on the same underlying B⁺-tree structure (see{" "}
+          <Link href="/concepts/mongodb-indexing" className="text-sky-400 hover:text-sky-300">MongoDB indexing</Link>{" "}
+          for why &ldquo;B-tree vs B+ tree&rdquo; is a common mix-up), but the index <em>types</em> map to different
+          document shapes: <strong>single-field</strong> and <strong>compound</strong> (follow the <em>ESR</em> rule
+          — Equality, Sort, Range — for field order), <strong>multikey</strong> (created automatically over array
+          fields), <strong>text</strong> for full-text search, <strong>2dsphere</strong> for geo queries, and{" "}
+          <strong>hashed</strong> for spreading data evenly across shards.
         </p>
       </Section>
 
       <Section title="Why a full scan can beat an index">
         <p>
-          An index scan does a random I/O per matching row; a full scan does one sequential sweep. Below a few percent
-          selectivity the index wins easily, but once a filter matches a large fraction of the table, the thousands of
-          random lookups cost more than just reading everything once — so the planner picks the scan. Postgres puts a{" "}
-          <strong>number</strong> on this via <code>EXPLAIN</code> (cost from <code>ANALYZE</code> statistics); MongoDB
-          races candidate plans and you judge efficiency from{" "}
-          <code>totalDocsExamined ÷ nReturned</code> (1:1 is perfect).
+          An index scan does one random disk lookup per matching row. A full scan does one sequential sweep over
+          everything. When only a small slice of the table matches your filter, the index wins easily. But once a
+          filter matches a large fraction of the table, doing thousands of individual random lookups ends up costing
+          more than just reading everything once — so the planner switches to a full scan instead.
+        </p>
+        <p>
+          Postgres puts an actual number on this trade-off via <code>EXPLAIN</code> (using statistics gathered by{" "}
+          <code>ANALYZE</code>). MongoDB takes a more empirical approach: when more than one plan looks viable, it
+          runs several candidate plans for a short trial period and keeps whichever wins, then caches that choice.
+          Either way, you can judge how well it worked from <code>totalDocsExamined ÷ nReturned</code> — the closer
+          to <strong>1:1</strong>, the better.
         </p>
       </Section>
 
       <Section title="Join strategies">
         <ul className="list-disc space-y-1 pl-5">
-          <li><strong>Nested loop</strong> — for each outer row, look up matches in the inner side. Cheap when the outer input is small and the inner is indexed.</li>
-          <li><strong>Hash join</strong> — build a hash table on the smaller input, stream the larger and probe it. The workhorse for large, unsorted equi-joins.</li>
-          <li><strong>Merge join</strong> — both inputs sorted on the key, advance two pointers in one pass. Great when the rows already arrive sorted (e.g. from an index).</li>
-          <li><strong>MongoDB <code>$lookup</code></strong> — an (indexed) nested-loop join in the aggregation pipeline. Index the foreign field or it degrades to a scan per document; often you <strong>embed</strong> instead to avoid the join.</li>
+          <li><strong>Nested loop</strong> — for each row on one side, look up matches on the other. Cheap when the outer side is small and the inner side is indexed.</li>
+          <li><strong>Hash join</strong> — build a hash table from the smaller input, then stream the larger input and probe it. The default workhorse for large, unsorted equality joins.</li>
+          <li><strong>Merge join</strong> — walk two inputs that are already sorted on the join key, advancing two pointers together in one pass. Great when the rows already arrive sorted, e.g. from an index.</li>
+          <li><strong>MongoDB <code>$lookup</code></strong> — effectively a nested-loop join inside the aggregation pipeline. Index the foreign field, or it degrades into a full scan per input document; often it&rsquo;s simpler to <strong>embed</strong> the related data instead of joining at all.</li>
         </ul>
       </Section>
 
       <Section title="Common mistakes">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Assuming an index is always used — a low-selectivity filter, a function on the column, or a type mismatch silently forces a scan.</li>
-          <li>Wrong composite / compound column order, so the query can&rsquo;t use the index (Postgres leftmost-prefix, Mongo ESR).</li>
-          <li>A <code>$lookup</code> with no index on the foreign field — an O(n·m) join hiding in a pipeline.</li>
-          <li>Never running <code>EXPLAIN</code> / <code>explain(&quot;executionStats&quot;)</code>, so you never see the plan actually chosen.</li>
+          <li>Assuming an index is always used — a low-selectivity filter, a function wrapped around the column, or a type mismatch can silently force a full scan instead.</li>
+          <li>Getting compound/composite column order wrong, so the query can&rsquo;t use the index at all (Postgres: leftmost-prefix rule; Mongo: the ESR rule).</li>
+          <li>Running a <code>$lookup</code> with no index on the foreign field — an accidental O(n·m) join hiding inside an aggregation pipeline.</li>
+          <li>Never running <code>EXPLAIN</code> or <code>explain(&quot;executionStats&quot;)</code>, so you never actually see which plan the database chose.</li>
         </ul>
       </Section>
 

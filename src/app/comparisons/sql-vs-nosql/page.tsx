@@ -41,17 +41,19 @@ export default function SqlVsNoSqlPage() {
 
       <H2 id="model">It&rsquo;s a data-model decision</H2>
       <P>
-        A relational database wants your data <strong>normalized</strong>: each fact in one place, related by keys, and
-        assembled at read time with <strong>joins</strong>. That&rsquo;s ideal when the same data is queried many
-        different ways and integrity matters — an order references a customer, which references an address, and none of
-        them drift out of sync.
+        A relational database wants your data <strong>normalized</strong>: each fact stored exactly once, linked to
+        other facts by keys, and reassembled at read time with <strong>joins</strong>. That&rsquo;s ideal when the
+        same data is queried many different ways and integrity matters — an order references a customer, which
+        references an address, and none of them drift out of sync with each other.
       </P>
       <P>
-        NoSQL flips it. A document store like <A href="/technologies/mongodb">MongoDB</A> keeps the whole aggregate — the
-        order <em>with</em> its line items — in one document, so a read is a single lookup with no join. A wide-column
-        store like <A href="/technologies/cassandra">Cassandra</A> goes further: you design a table per query and{" "}
-        <A href="/concepts/sharding">shard</A> it across a ring. The price is duplication and the discipline of{" "}
-        <strong>query-first modeling</strong> — you can&rsquo;t just ask a new question later.
+        NoSQL flips that around. A document store like <A href="/technologies/mongodb">MongoDB</A> keeps everything
+        related to one thing — an order <em>together with</em> its line items — in a single document, so a read is
+        one lookup with no join needed. A wide-column store like <A href="/technologies/cassandra">Cassandra</A> goes
+        further: you design a separate table for each query you plan to run, then <A href="/concepts/sharding">shard</A>{" "}
+        (split) that table across many machines. The price is duplicated data and{" "}
+        <strong>query-first modeling</strong> — you have to know your access patterns up front, because adding a
+        brand-new kind of question later is hard.
       </P>
 
       <PullQuote>SQL lets you ask questions you didn&rsquo;t plan for. NoSQL makes the questions you did plan for very cheap.</PullQuote>
@@ -59,20 +61,23 @@ export default function SqlVsNoSqlPage() {
       <H2 id="consistency">Consistency &amp; transactions</H2>
       <P>
         SQL databases give you <A href="/concepts/acid">ACID</A> transactions and tunable{" "}
-        <A href="/concepts/isolation-levels">isolation levels</A> — you can move money between two rows and know the
-        invariant holds. Many NoSQL stores historically offered <A href="/concepts/base">BASE</A> instead: eventual
-        consistency, no multi-key transactions, and <A href="/concepts/delivery-semantics">at-least-once</A> semantics
-        you dedup around. The line has blurred — MongoDB has multi-document transactions, and Cassandra has tunable
-        quorums — but strong, cross-entity guarantees are still SQL&rsquo;s home turf.
+        <A href="/concepts/isolation-levels">isolation levels</A> — you can move money between two rows and be sure
+        the total is correct, even if something crashes halfway through. Many NoSQL stores historically offered{" "}
+        <A href="/concepts/base">BASE</A> instead: eventual consistency (readers may briefly see stale data), no
+        transactions spanning multiple keys, and <A href="/concepts/delivery-semantics">at-least-once</A> message
+        delivery that your application has to de-duplicate. That line has blurred — MongoDB supports multi-document
+        transactions, and Cassandra offers tunable read/write quorums — but strong guarantees across multiple pieces
+        of data are still SQL&rsquo;s home turf.
       </P>
 
       <H2 id="scaling">The scaling myth</H2>
       <P>
         &ldquo;SQL can&rsquo;t scale&rdquo; is wrong. Postgres and MySQL scale reads with{" "}
-        <A href="/concepts/replication">replicas</A> and writes with partitioning, and run some of the largest systems on
-        earth. What&rsquo;s true is that NoSQL stores were <em>designed from day one</em> for horizontal sharding and
-        masterless writes, so they make that path easier and more automatic. If you will genuinely outgrow one primary&rsquo;s
-        write capacity, that head start matters. Most applications never get there.
+        <A href="/concepts/replication">replicas</A> and scale writes with partitioning, and plenty of the largest
+        systems on earth run on them. What <em>is</em> true: NoSQL stores were designed from day one for horizontal
+        sharding, with no single server acting as the required write leader, so that scale-out path is easier and
+        more automatic out of the box. If you will genuinely outgrow what one primary server can write, that head
+        start matters. Most applications never actually get there.
       </P>
 
       <H2 id="matrix">Side by side</H2>

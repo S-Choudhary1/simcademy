@@ -33,74 +33,87 @@ export default function TwoPhaseCommitPage() {
         <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-0.5 text-xs font-medium text-fuchsia-300">Concept</span>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50">Two-Phase Commit (2PC)</h1>
         <p className="mt-2 text-slate-400">
-          Commit a transaction across several databases atomically — with a coordinator, and a well-known catch.
+          Commit one transaction across several databases or services, all-or-nothing — with a coordinator, and a
+          well-known catch.
         </p>
       </header>
 
       <Section title="Definition">
         <p>
-          2PC makes multiple participants commit all-or-nothing under a <strong>coordinator</strong>.{" "}
-          <strong>Phase 1 (prepare)</strong>: the coordinator asks each participant to prepare and vote; a YES means
-          &ldquo;I&rsquo;ve durably staged the change and can commit&rdquo;. <strong>Phase 2 (commit/abort)</strong>:
-          if every vote is YES the coordinator tells everyone to COMMIT, otherwise everyone ABORTs.
+          2PC gets multiple participants to commit a single transaction together — either all of them commit, or
+          none do. A <strong>coordinator</strong> runs two rounds:
         </p>
+        <ol className="list-decimal space-y-1 pl-5">
+          <li>
+            <strong>Prepare</strong>: the coordinator asks every participant to get ready. Each one locks the data,
+            writes the pending change to disk, and replies YES (&ldquo;I can commit this&rdquo;) or NO.
+          </li>
+          <li>
+            <strong>Commit or abort</strong>: if every participant said YES, the coordinator tells everyone to
+            COMMIT. If even one said NO, it tells everyone to ABORT and roll back.
+          </li>
+        </ol>
       </Section>
 
       <Section title="The problem it solves">
         <p>
-          When one logical transaction spans separate databases or services, there is no shared COMMIT. 2PC provides
-          that atomicity: either all participants apply the change or none do — no partial state across systems.
+          A normal database gives you one COMMIT that&rsquo;s all-or-nothing. But if a single transaction touches two
+          separate databases or services, there&rsquo;s no shared COMMIT button that covers both of them. 2PC fakes
+          one: it makes sure either every participant applies the change, or none of them do — never a half-done
+          state split across systems.
         </p>
       </Section>
 
       <Section title="Try it">
         <p>
-          Run <strong>All commit</strong> for the happy path, <strong>One aborts</strong> to see a single NO vote roll
-          everyone back, and <strong>Coordinator crash</strong> to watch participants get stuck in-doubt — holding
-          locks, unable to decide. That is the blocking problem.
+          Click <strong>All commit</strong> for the happy path. Click <strong>One aborts</strong> to see a single NO
+          vote roll everything back. Click <strong>Coordinator crash</strong> to see participants stuck waiting —
+          they&rsquo;ve already said YES and locked their data, but with no coordinator left to tell them commit or
+          abort, they can&rsquo;t safely do either. That stuck state is 2PC&rsquo;s biggest weakness, known as{" "}
+          <strong>blocking</strong>.
         </p>
         <TwoPhaseCommitViz />
       </Section>
 
       <Section title="Analogy">
         <p>
-          A wedding officiant asks each partner &ldquo;do you?&rdquo; (prepare). Only if <em>both</em> say yes does the
-          officiant pronounce them married (commit). If the officiant faints right after the vows but before
-          pronouncing, everyone is stuck waiting — nobody can finish it alone.
+          A wedding officiant asks each partner &ldquo;do you?&rdquo; (prepare). Only if <em>both</em> say yes does
+          the officiant pronounce them married (commit). If the officiant faints right after the vows but before
+          pronouncing, everyone is stuck waiting — nobody can finish the ceremony alone.
         </p>
       </Section>
 
       <Section title="Where it&rsquo;s used">
         <p>
-          Classic distributed transactions via XA/JTA transaction managers, and inside some databases across shards.
-          In modern microservices it&rsquo;s largely avoided in favour of a{" "}
-          <Link href="/concepts/saga" className="text-sky-400 hover:text-sky-300">saga</Link> (availability over strict
-          atomicity).
+          Classic distributed transactions via XA/JTA transaction managers, and some databases that coordinate
+          commits across their own internal shards. Modern microservice systems mostly avoid 2PC in favour of a{" "}
+          <Link href="/concepts/saga" className="text-sky-400 hover:text-sky-300">saga</Link> — trading strict,
+          instant atomicity for a system that never gets stuck.
         </p>
       </Section>
 
       <Section title="How to implement">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Use an XA-capable transaction manager (JTA, MSDTC) rather than hand-rolling the protocol.</li>
-          <li>Each participant must <strong>durably</strong> record the &ldquo;prepared&rdquo; state so it can recover and honour the coordinator&rsquo;s later decision.</li>
-          <li>The coordinator writes its decision to a log before sending Phase 2, and re-sends on recovery.</li>
-          <li>Add timeouts so a participant isn&rsquo;t blocked forever — but note it still can&rsquo;t safely decide alone.</li>
+          <li>Use an existing XA-capable transaction manager (JTA, MSDTC) rather than writing the coordinator yourself.</li>
+          <li>Every participant must save its &ldquo;prepared&rdquo; state to disk before replying YES — otherwise it can&rsquo;t safely resume after a restart.</li>
+          <li>The coordinator must also save its final decision to disk before sending it out, and resend that decision if it restarts.</li>
+          <li>Add timeouts so a stuck participant doesn&rsquo;t wait forever for a crashed coordinator — but note it still can&rsquo;t safely guess the right answer on its own; all it can do is keep retrying to reach the coordinator.</li>
         </ul>
       </Section>
 
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Strong cross-system atomicity vs <strong>blocking</strong>: if the coordinator dies after prepare, participants hold locks in-doubt.</li>
-          <li>Latency: two round trips plus durable fsyncs on every participant.</li>
-          <li>Availability and scale suffer — one slow/failed participant stalls the whole commit. Three-phase commit and consensus-based commit reduce blocking but add complexity.</li>
+          <li>Strict all-or-nothing correctness across systems vs <strong>blocking</strong>: if the coordinator disappears right after Phase 1, participants sit there holding locks until it comes back.</li>
+          <li>It&rsquo;s slow — two network round trips, plus a durable disk write on every participant, for every transaction.</li>
+          <li>One slow or unreachable participant stalls the whole commit for everyone else. Newer protocols (three-phase commit, consensus-based commit) shrink the blocking window but add their own complexity.</li>
         </ul>
       </Section>
 
       <Section title="Common mistakes">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Reaching for 2PC across microservices at scale — the blocking and coupling usually make a saga the better call.</li>
-          <li>No durable prepare record, so a recovered participant can&rsquo;t honour the decision.</li>
-          <li>Assuming 2PC is partition-tolerant — a partition during Phase 2 is exactly the blocking case.</li>
+          <li>Reaching for 2PC across microservices by default — at scale, the blocking and tight coupling usually make a saga the better fit.</li>
+          <li>Skipping the durable &ldquo;prepared&rdquo; record — without it, a participant that restarts can&rsquo;t honour whatever the coordinator decided.</li>
+          <li>Assuming 2PC handles a network partition gracefully — a partition during Phase 2 <em>is</em> the stuck, blocking scenario above.</li>
         </ul>
       </Section>
 

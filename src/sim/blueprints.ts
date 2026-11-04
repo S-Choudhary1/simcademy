@@ -174,9 +174,9 @@ const postgresql: Record<Level, BlueprintMeta> = {
     id: "postgresql-advanced",
     title: "Read replicas for read scaling",
     summary:
-      "Reads fan out across replicas via a load balancer while the cache absorbs the hottest keys. Adding replicas scales reads — the write path (a single primary) is a separate problem.",
+      "Three database nodes behind a router share incoming load round-robin, so total capacity grows with each one you add — this generic simulator treats every request the same, so it can't enforce PostgreSQL's real rule that only the primary accepts writes. For that constraint, see the streaming-replication demo below.",
     concepts: ["Read replicas", "Read scaling", "Write bottleneck"],
-    tryThis: "Push traffic up — reads fan out across replicas while the single write path stays fixed.",
+    tryThis: "Push traffic up and watch load spread evenly across all three database nodes, then compare against the real write-bottleneck story in the replication demo below.",
     blueprint: {
       id: "postgresql-advanced",
       title: "PostgreSQL · Advanced",
