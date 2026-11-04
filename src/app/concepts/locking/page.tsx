@@ -40,11 +40,11 @@ export default function LockingPage() {
 
       <Section title="Definition">
         <p>
-          <strong>Concurrency control</strong> decides what happens when two operations try to touch the same data at
-          the same time. <strong>Optimistic locking</strong> assumes conflicts are rare: it lets both operations
+          <strong>Concurrency control</strong>{" "}decides what happens when two operations try to touch the same data at
+          the same time. <strong>Optimistic locking</strong>{" "}assumes conflicts are rare: it lets both operations
           proceed and only checks for a conflict at write time, using a version number. <strong>Pessimistic
-          locking</strong> assumes conflicts are common: it takes a lock up front, so one writer simply waits for the
-          other to finish. A <strong>distributed lock</strong> is the same idea as pessimistic locking, but
+          locking</strong>{" "}assumes conflicts are common: it takes a lock up front, so one writer simply waits for the
+          other to finish. A <strong>distributed lock</strong>{" "}is the same idea as pessimistic locking, but
           coordinated across separate processes or services instead of inside one database.
         </p>
       </Section>
@@ -61,7 +61,7 @@ export default function LockingPage() {
 
       <Section title="Try it">
         <p>
-          Run it with <strong>No lock</strong> and watch the update get lost. Switch to <strong>Optimistic</strong>{" "}
+          Run it with <strong>No lock</strong>{" "}and watch the update get lost. Switch to <strong>Optimistic</strong>{" "}
           — the version check forces the second writer to retry — or <strong>Pessimistic</strong> — the row lock
           makes the second writer simply wait its turn. Both end up at the correct $200.
         </p>

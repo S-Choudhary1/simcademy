@@ -30,7 +30,7 @@ export default function KafkaVsRabbitMqPage() {
       <Lede>
         Both sit between the thing sending a message and the thing receiving it, so neither side has to wait on the
         other — that&rsquo;s why people lump them together. But they&rsquo;re built on opposite ideas. Kafka{" "}
-        <em>keeps</em> every message and lets many readers replay the same history; RabbitMQ <em>delivers</em> a
+        <em>keeps</em>{" "}every message and lets many readers replay the same history; RabbitMQ <em>delivers</em>{" "}a
         message to one consumer and then deletes it. Almost every difference below falls out of that one distinction.
       </Lede>
 
@@ -38,7 +38,7 @@ export default function KafkaVsRabbitMqPage() {
         <A href="/technologies/kafka">Kafka</A> is a <strong>distributed commit log</strong>: messages are appended
         and kept around, and independent consumer groups can replay the stream from any point (its <strong>offset</strong>).{" "}
         <A href="/technologies/rabbitmq">RabbitMQ</A> is a <strong>smart broker</strong>: a component called an{" "}
-        <strong>exchange</strong> routes each message into one or more queues, a consumer confirms (&ldquo;acks&rdquo;)
+        <strong>exchange</strong>{" "}routes each message into one or more queues, a consumer confirms (&ldquo;acks&rdquo;)
         it, and it&rsquo;s removed. Kafka optimizes for throughput and replay; RabbitMQ optimizes for flexible routing
         and handing each message to one consumer at a time — though like most brokers, its default guarantee is{" "}
         <A href="/concepts/delivery-semantics">at-least-once</A>, so a redelivered message can occasionally arrive twice.
@@ -47,7 +47,7 @@ export default function KafkaVsRabbitMqPage() {
       <H2 id="simulation">See them run</H2>
       <P>
         The same traffic drives both. Push the load past what the consumers can handle and watch the backlog (lag) build
-        on each broker — under pure load they behave similarly. The <em>real</em> differences — replay, routing,
+        on each broker — under pure load they behave similarly. The <em>real</em>{" "}differences — replay, routing,
         retention — are semantic, and they&rsquo;re in the table further down.
       </P>
       <Figure wide caption="Same traffic, both brokers. Raise the load and watch lag build on each.">
@@ -62,7 +62,7 @@ export default function KafkaVsRabbitMqPage() {
         Kafka is built for <strong>throughput</strong>: it writes to the log sequentially and reads with a &ldquo;zero-copy&rdquo;
         trick (sending bytes straight from the disk cache to the network, instead of copying them through the
         application first). That combination lets one cluster move millions of messages a second. RabbitMQ gives you{" "}
-        <strong>low per-message latency</strong> and per-message acknowledgement, but its routing logic and ack
+        <strong>low per-message latency</strong>{" "}and per-message acknowledgement, but its routing logic and ack
         bookkeeping cap its raw throughput below Kafka&rsquo;s. If the stream itself is the product, that ceiling
         matters; for everyday task queues, it rarely does.
       </P>
@@ -71,8 +71,8 @@ export default function KafkaVsRabbitMqPage() {
 
       <H2 id="replay">Replay &amp; failure behavior</H2>
       <P>
-        Because Kafka <strong>retains</strong> messages, a crashed consumer just resumes from its last committed offset —
-        and can rewind to reprocess history after a bug. RabbitMQ <strong>redelivers</strong> un-acked messages to another
+        Because Kafka <strong>retains</strong>{" "}messages, a crashed consumer just resumes from its last committed offset —
+        and can rewind to reprocess history after a bug. RabbitMQ <strong>redelivers</strong>{" "}un-acked messages to another
         consumer, but there&rsquo;s no replay of messages already acked and deleted. That single fact — retain vs delete —
         is why Kafka powers event sourcing and data pipelines while RabbitMQ powers work queues.
       </P>
@@ -101,8 +101,8 @@ export default function KafkaVsRabbitMqPage() {
       />
       <P>
         For a plain &ldquo;producer → queue → worker&rdquo; decoupling, either is fine — pick the one your team already
-        runs well. Reach for Kafka when the <em>data stream</em> is the product; reach for RabbitMQ when <em>work
-        distribution and routing</em> are.
+        runs well. Reach for Kafka when the <em>data stream</em>{" "}is the product; reach for RabbitMQ when <em>work
+        distribution and routing</em>{" "}are.
       </P>
 
       <Related

@@ -75,12 +75,12 @@ export default function NetflixPage() {
 
       <Section title="5. Request Flow">
         <p>
-          <strong>Video:</strong> the player requests video chunks from the nearest edge server (Netflix calls its own
+          <strong>Video:</strong>{" "}the player requests video chunks from the nearest edge server (Netflix calls its own
           edge hardware &ldquo;Open Connect&rdquo; appliances), which almost always already has them cached and ready
           to serve.
         </p>
         <p>
-          <strong>Metadata:</strong> browse and recommendation calls also go through the CDN first; only on a cache
+          <strong>Metadata:</strong>{" "}browse and recommendation calls also go through the CDN first; only on a cache
           miss do they fall back to the origin API stack (gateway → services → cache → database).
         </p>
       </Section>
@@ -106,7 +106,7 @@ export default function NetflixPage() {
         <p>
           Lower the CDN hit ratio in the simulation and watch the origin get overwhelmed as more traffic reaches
           it — this is exactly why edge resilience and graceful degradation matter so much here. You can also select
-          the origin <strong>Cache</strong> and click <strong>Kill</strong>: every request that still reaches it
+          the origin <strong>Cache</strong>{" "}and click <strong>Kill</strong>: every request that still reaches it
           now errors out, since this simulator treats a dead dependency as a hard failure rather than something
           that quietly falls back to the database. (Deleting the cache node instead just removes its only
           connection to the database, which starves the database of traffic entirely rather than overwhelming it —

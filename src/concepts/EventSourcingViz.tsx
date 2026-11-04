@@ -120,7 +120,7 @@ export function EventSourcingViz() {
           className="w-full accent-sky-500"
         />
         <p className="mt-2 text-[11px] leading-snug text-slate-500">
-          There is no stored &ldquo;balance&rdquo; column — the balance is <em>computed</em> from the events. Drag the
+          There is no stored &ldquo;balance&rdquo; column — the balance is <em>computed</em>{" "}from the events. Drag the
           scrubber to rebuild the state as it was at any point in history.
         </p>
       </div>

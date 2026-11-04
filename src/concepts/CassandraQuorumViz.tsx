@@ -76,9 +76,9 @@ export function CassandraQuorumViz() {
       </div>
 
       <p className="mt-3 text-[12px] leading-snug text-slate-400">
-        This is Cassandra&rsquo;s superpower: consistency is a <strong>per-query</strong> dial, not a fixed property. Want
+        This is Cassandra&rsquo;s superpower: consistency is a <strong>per-query</strong>{" "}dial, not a fixed property. Want
         speed and availability? Use <code>ONE</code>. Need to read your own writes? Pick W and R so that{" "}
-        <strong>R + W &gt; N</strong> (e.g. <code>QUORUM</code> reads and writes). Under a partition, a lower quorum keeps
+        <strong>R + W &gt; N</strong>{" "}(e.g. <code>QUORUM</code>{" "}reads and writes). Under a partition, a lower quorum keeps
         you available (AP); a higher one keeps you consistent (CP).
       </p>
 

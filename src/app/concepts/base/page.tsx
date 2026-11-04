@@ -41,14 +41,14 @@ export default function BasePage() {
 
       <Section title="Definition">
         <p>
-          BASE systems choose to stay <strong>available</strong> instead of being immediately consistent. A write is
+          BASE systems choose to stay <strong>available</strong>{" "}instead of being immediately consistent. A write is
           accepted and confirmed quickly on one server, then copied out to the other servers (replicas) in the
           background.
         </p>
         <p>
           During that short window, a replica can answer with old data — that&rsquo;s the <strong>soft state</strong>{" "}
           part. As long as no new writes come in, every replica eventually catches up and agrees — that&rsquo;s the{" "}
-          <strong>eventually consistent</strong> part.
+          <strong>eventually consistent</strong>{" "}part.
         </p>
       </Section>
 
@@ -95,7 +95,7 @@ export default function BasePage() {
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
           <li>Availability, scale, and low latency vs stale reads and the extra work of resolving conflicts.</li>
-          <li>Great for feeds, counters, catalogs, and social graphs; the wrong choice for money or inventory (use <Link href="/concepts/acid" className="text-sky-400 hover:text-sky-300">ACID</Link> there).</li>
+          <li>Great for feeds, counters, catalogs, and social graphs; the wrong choice for money or inventory (use <Link href="/concepts/acid" className="text-sky-400 hover:text-sky-300">ACID</Link>{" "}there).</li>
           <li>&ldquo;Eventually&rdquo; is not instant — under load, convergence can take seconds, not milliseconds.</li>
         </ul>
       </Section>

@@ -31,16 +31,16 @@ export default function RetriesBackoffPage() {
         <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-0.5 text-xs font-medium text-fuchsia-300">Concept</span>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50">Retries, Backoff &amp; Jitter</h1>
         <p className="mt-2 text-slate-400">
-          Retrying a failed request is obvious. Retrying <em>well</em> is not — done naively, retries turn a brief blip
+          Retrying a failed request is obvious. Retrying <em>well</em>{" "}is not — done naively, retries turn a brief blip
           into a self-inflicted outage.
         </p>
       </header>
 
       <Section title="Definition">
         <p>
-          A <strong>retry</strong> is just sending a failed request again. Two choices turn a retry from dangerous into
-          safe: <strong>backoff</strong> (how long to wait before trying again — usually longer each time) and{" "}
-          <strong>jitter</strong> (adding randomness to that wait so many clients don&rsquo;t all retry at the exact
+          A <strong>retry</strong>{" "}is just sending a failed request again. Two choices turn a retry from dangerous into
+          safe: <strong>backoff</strong>{" "}(how long to wait before trying again — usually longer each time) and{" "}
+          <strong>jitter</strong>{" "}(adding randomness to that wait so many clients don&rsquo;t all retry at the exact
           same moment).
         </p>
       </Section>
@@ -48,19 +48,19 @@ export default function RetriesBackoffPage() {
       <Section title="The problem it solves">
         <p>
           When a service hiccups, every client calling it tends to fail at the same instant. If they all retry on the
-          same fixed schedule, they hit the recovering service in one synchronized <strong>spike</strong> that knocks
-          it back down — right as it was starting to recover. This is called a <strong>thundering herd</strong> (or
-          retry storm). The fix is to make retries both <em>patient</em> (wait longer each time) and{" "}
-          <em>desynchronized</em> (don&rsquo;t let everyone wait the exact same amount of time).
+          same fixed schedule, they hit the recovering service in one synchronized <strong>spike</strong>{" "}that knocks
+          it back down — right as it was starting to recover. This is called a <strong>thundering herd</strong>{" "}(or
+          retry storm). The fix is to make retries both <em>patient</em>{" "}(wait longer each time) and{" "}
+          <em>desynchronized</em>{" "}(don&rsquo;t let everyone wait the exact same amount of time).
         </p>
       </Section>
 
       <Section title="Try it">
         <p>
           Five clients all fail at the same instant. Switch between strategies and watch two things: the{" "}
-          <strong>timeline</strong> (when each client retries) and the <strong>load histogram</strong> (how many
+          <strong>timeline</strong>{" "}(when each client retries) and the <strong>load histogram</strong>{" "}(how many
           retries hit the service each second). Naive strategies produce tall synchronized bars — the thundering herd
-          in action. <strong>Exponential backoff + jitter</strong> flattens them into a steady trickle.
+          in action. <strong>Exponential backoff + jitter</strong>{" "}flattens them into a steady trickle.
         </p>
         <RetryBackoffViz />
       </Section>
@@ -89,12 +89,12 @@ export default function RetriesBackoffPage() {
           <li>
             <strong>Jitter</strong> — randomize each delay so clients don&rsquo;t retry in lock-step. AWS&rsquo;s
             &ldquo;full jitter&rdquo; recommendation is{" "}
-            <code>sleep = random(0, min(cap, base · 2^attempt))</code> — a <code>cap</code> keeps the maximum wait from
+            <code>sleep = random(0, min(cap, base · 2^attempt))</code> — a <code>cap</code>{" "}keeps the maximum wait from
             growing forever as attempts pile up.
           </li>
           <li><strong>Cap attempts &amp; total time</strong> — give up eventually; retrying forever just moves the outage from the service to every one of its callers.</li>
           <li><strong>Only retry idempotent / retriable errors</strong> — never blindly retry a non-idempotent write (see <Link href="/concepts/idempotency" className="text-sky-400 hover:text-sky-300">Idempotency</Link>), and never retry a 4xx — the same bad request will fail the exact same way every time.</li>
-          <li>Pair retries with a <Link href="/concepts/circuit-breaker" className="text-sky-400 hover:text-sky-300">circuit breaker</Link> so you stop hammering a dependency that&rsquo;s clearly down instead of retrying into the void.</li>
+          <li>Pair retries with a <Link href="/concepts/circuit-breaker" className="text-sky-400 hover:text-sky-300">circuit breaker</Link>{" "}so you stop hammering a dependency that&rsquo;s clearly down instead of retrying into the void.</li>
         </ul>
       </Section>
 

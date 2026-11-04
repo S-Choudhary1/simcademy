@@ -69,8 +69,8 @@ export default function CapPage() {
 
       <Section title="Try it">
         <p>
-          Click <strong>Partition network</strong> to cut the connection between servers A and B. Pick{" "}
-          <strong>AP</strong> (favour <strong>Availability</strong>) or <strong>CP</strong> (favour{" "}
+          Click <strong>Partition network</strong>{" "}to cut the connection between servers A and B. Pick{" "}
+          <strong>AP</strong>{" "}(favour <strong>Availability</strong>) or <strong>CP</strong>{" "}(favour{" "}
           <strong>Consistency</strong>), then write to A and read from B. In AP mode, B still answers — but with
           stale data. In CP mode, B refuses to answer rather than risk returning the wrong value. Heal the network
           and both modes catch back up.
@@ -88,9 +88,9 @@ export default function CapPage() {
 
       <Section title="Where it&rsquo;s used">
         <p>
-          <strong>AP</strong> systems (favour availability): DynamoDB, Cassandra, and reading from a read replica
+          <strong>AP</strong>{" "}systems (favour availability): DynamoDB, Cassandra, and reading from a read replica
           (see <Link href="/concepts/base" className="text-sky-400 hover:text-sky-300">BASE</Link>).{" "}
-          <strong>CP</strong> systems (favour consistency): etcd, ZooKeeper, and quorum-based databases that refuse a
+          <strong>CP</strong>{" "}systems (favour consistency): etcd, ZooKeeper, and quorum-based databases that refuse a
           write unless a majority of servers confirm it.
         </p>
       </Section>
@@ -102,7 +102,7 @@ export default function CapPage() {
           <li>
             Some databases let you tune this per request using three numbers: <code>N</code> = how many replicas
             hold the data, <code>W</code> = how many replicas must confirm a write, <code>R</code> = how many
-            replicas you read from. You get strong consistency when <code>W + R &gt; N</code> (a &ldquo;quorum&rdquo;
+            replicas you read from. You get strong consistency when <code>W + R &gt; N</code>{" "}(a &ldquo;quorum&rdquo;
             read/write); you get maximum availability at <code>W = 1, R = 1</code>.
           </li>
           <li>For specific flows that must see their own writes immediately, route those reads to the primary, or use session consistency.</li>
@@ -113,7 +113,7 @@ export default function CapPage() {
         <ul className="list-disc space-y-1 pl-5">
           <li><strong>CP</strong>: correct, but rejects requests during a partition — lower availability.</li>
           <li><strong>AP</strong>: always answers, but reads can be stale, and you have to resolve conflicts somehow (last-write-wins, vector clocks, CRDTs).</li>
-          <li><strong>PACELC</strong> (an extension of CAP): even with no partition at all, synchronous replication still trades latency for consistency — <em>if</em> there&rsquo;s a <strong>P</strong>artition, choose <strong>A</strong>vailability or <strong>C</strong>onsistency; <strong>e</strong>lse, choose <strong>L</strong>atency or <strong>C</strong>onsistency.</li>
+          <li><strong>PACELC</strong>{" "}(an extension of CAP): even with no partition at all, synchronous replication still trades latency for consistency — <em>if</em>{" "}there&rsquo;s a <strong>P</strong>artition, choose <strong>A</strong>vailability or <strong>C</strong>onsistency; <strong>e</strong>lse, choose <strong>L</strong>atency or <strong>C</strong>onsistency.</li>
         </ul>
       </Section>
 

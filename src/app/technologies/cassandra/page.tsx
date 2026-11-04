@@ -42,19 +42,19 @@ export default function CassandraPage() {
           its own set of columns, spread across many machines by design.
         </p>
         <p>
-          It&rsquo;s <strong>masterless</strong> (also called peer-to-peer): every node is equal, there&rsquo;s no
+          It&rsquo;s <strong>masterless</strong>{" "}(also called peer-to-peer): every node is equal, there&rsquo;s no
           single leader that could fail, and a client can send a write to any node in the cluster.
         </p>
         <p>
           Data is spread across the cluster using{" "}
           <Link href="/concepts/consistent-hashing" className="text-sky-400 hover:text-sky-300">consistent hashing</Link>{" "}
           (with virtual nodes to spread the load more evenly) — each row lands on whichever node owns that part of the
-          hash space, and is copied to <strong>RF</strong> (replication factor) nodes total, not just one, so losing a
+          hash space, and is copied to <strong>RF</strong>{" "}(replication factor) nodes total, not just one, so losing a
           single node never loses data.
         </p>
         <p>
           Storage is built on an{" "}
-          <Link href="/concepts/lsm-vs-btree" className="text-sky-400 hover:text-sky-300">LSM-tree</Link> (log-structured
+          <Link href="/concepts/lsm-vs-btree" className="text-sky-400 hover:text-sky-300">LSM-tree</Link>{" "}(log-structured
           merge-tree) — a structure optimised to make writes extremely cheap, which is the main reason Cassandra can
           absorb so much write traffic.
         </p>
@@ -63,11 +63,11 @@ export default function CassandraPage() {
       <Section title="2. Tunable consistency (its signature)">
         <p>
           Cassandra doesn&rsquo;t force one consistency level on every query — you choose, per query, how many
-          replicas must respond before it counts as done: <code>ONE</code>, <code>QUORUM</code> (a majority), or{" "}
+          replicas must respond before it counts as done: <code>ONE</code>, <code>QUORUM</code>{" "}(a majority), or{" "}
           <code>ALL</code>. You set this separately for reads (<strong>R</strong>) and writes (<strong>W</strong>).
         </p>
         <p>
-          The rule that matters: when <strong>R + W &gt; N</strong> (N being the total number of replicas), the set of
+          The rule that matters: when <strong>R + W &gt; N</strong>{" "}(N being the total number of replicas), the set of
           replicas you read from and the set you wrote to are guaranteed to overlap by at least one node — so a read
           is guaranteed to see the latest write. That&rsquo;s strong consistency. Pick R and W so they don&rsquo;t
           overlap, and reads can come back stale (eventual consistency) — but faster, since fewer replicas need to
@@ -78,10 +78,10 @@ export default function CassandraPage() {
 
       <Section title="3. How a write works">
         <ol className="list-decimal space-y-1 pl-5">
-          <li>The client sends the write to any node. That node becomes the <strong>coordinator</strong> for this one request and forwards it to the RF replicas that actually own the row.</li>
-          <li>Each replica writes it twice, fast: first to a <strong>commit log</strong> on disk (so it survives a crash), then into an in-memory table called a <strong>memtable</strong>.</li>
+          <li>The client sends the write to any node. That node becomes the <strong>coordinator</strong>{" "}for this one request and forwards it to the RF replicas that actually own the row.</li>
+          <li>Each replica writes it twice, fast: first to a <strong>commit log</strong>{" "}on disk (so it survives a crash), then into an in-memory table called a <strong>memtable</strong>.</li>
           <li>Later, a full memtable gets flushed to disk as an immutable file called an <strong>SSTable</strong>. Nothing is ever edited in place — everything is just appended — which is exactly why writes are so cheap.</li>
-          <li>A background process called <strong>compaction</strong> periodically merges old SSTables together and throws away data that&rsquo;s been overwritten or deleted.</li>
+          <li>A background process called <strong>compaction</strong>{" "}periodically merges old SSTables together and throws away data that&rsquo;s been overwritten or deleted.</li>
           <li>If a replica missed the write (it was down, say), Cassandra catches it up later via <strong>hinted handoff</strong>, <strong>read repair</strong>, and <strong>anti-entropy</strong> — three different mechanisms aimed at the same goal: every replica eventually agreeing.</li>
         </ol>
       </Section>
@@ -90,7 +90,7 @@ export default function CassandraPage() {
         <p>
           Cassandra has <strong>no joins and no ad-hoc queries</strong> — you design each table around one specific
           query you need to run fast, not around the data&rsquo;s natural shape. The <strong>partition key</strong>{" "}
-          decides which node owns a row; the <strong>clustering columns</strong> decide the order rows are stored in
+          decides which node owns a row; the <strong>clustering columns</strong>{" "}decide the order rows are stored in
           within that partition. It&rsquo;s normal — even expected — to duplicate the same data across several
           tables shaped for different queries, since storage is cheap and every query needs to hit a single partition
           to stay fast.

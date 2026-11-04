@@ -28,9 +28,9 @@ export default function AboutPage() {
 
       <h2 className="mt-10 text-xl font-semibold text-slate-100">Our principles</h2>
       <ul className="mt-4 space-y-2 pl-5 text-[16px] leading-relaxed text-slate-300 [&>li]:list-disc marker:text-slate-600">
-        <li><strong>Correct over impressive.</strong> A simulation only models what it can model accurately — the rest gets a dedicated, honest visualization. We fact-check claims against primary sources.</li>
-        <li><strong>Learn by doing.</strong> Every idea is something you can run, tune, and break.</li>
-        <li><strong>Free and open to explore.</strong> No signup to learn.</li>
+        <li><strong>Correct over impressive.</strong>{" "}A simulation only models what it can model accurately — the rest gets a dedicated, honest visualization. We fact-check claims against primary sources.</li>
+        <li><strong>Learn by doing.</strong>{" "}Every idea is something you can run, tune, and break.</li>
+        <li><strong>Free and open to explore.</strong>{" "}No signup to learn.</li>
       </ul>
 
       <div className="mt-10 flex flex-wrap gap-3">

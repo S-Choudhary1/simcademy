@@ -69,7 +69,7 @@ export default function PostgresPage() {
 
       <Section id="overview" title="1. Overview">
         <p>
-          PostgreSQL is a durable, <strong>ACID-compliant</strong> relational database — once it tells you a write
+          PostgreSQL is a durable, <strong>ACID-compliant</strong>{" "}relational database — once it tells you a write
           succeeded, that write is safe even if the server crashes a second later. One server, the{" "}
           <strong>primary</strong>, accepts every write. It streams a record of every change (the{" "}
           <strong>WAL</strong>, short for write-ahead log) to one or more <strong>replicas</strong> — copies of the
@@ -89,11 +89,11 @@ export default function PostgresPage() {
 
       <Section id="simulation" title="3. Interactive Simulation">
         <p>
-          Press <strong>Play</strong> and drag <strong>Traffic</strong> to change the request rate. At{" "}
-          <strong>Beginner</strong> every request hits one database; at <strong>Intermediate</strong> a cache soaks up
-          repeat reads first; at <strong>Advanced</strong> a router spreads load evenly across three database nodes
+          Press <strong>Play</strong>{" "}and drag <strong>Traffic</strong>{" "}to change the request rate. At{" "}
+          <strong>Beginner</strong>{" "}every request hits one database; at <strong>Intermediate</strong>{" "}a cache soaks up
+          repeat reads first; at <strong>Advanced</strong>{" "}a router spreads load evenly across three database nodes
           labelled Primary/Replica 1/Replica 2. Click any node to open the Inspector and watch its live utilisation,
-          or use <strong>Kill</strong> to take it down and see the router shift load to the remaining two.
+          or use <strong>Kill</strong>{" "}to take it down and see the router shift load to the remaining two.
         </p>
         <p>
           One honest limitation: this generic simulator treats every request the same way, so it can&rsquo;t enforce
@@ -107,11 +107,11 @@ export default function PostgresPage() {
         <h3 className="mt-6 text-base font-semibold text-slate-100">Internals: streaming replication &amp; WAL</h3>
         <p>
           Every commit is appended to the primary&rsquo;s write-ahead log, advancing a counter called the{" "}
-          <strong>LSN</strong> (log sequence number) that marks exactly how far into that log you are. Replicas
+          <strong>LSN</strong>{" "}(log sequence number) that marks exactly how far into that log you are. Replicas
           stream that log and replay it; the gap between the primary&rsquo;s LSN and a replica&rsquo;s LSN is the
-          replication lag. Drag <strong>Write</strong> up, switch between <strong>Async</strong> replication (fast,
-          but can lag) and <strong>Sync</strong> replication (no lag on that standby, but every write waits for it),
-          then click <strong>Fail primary</strong> and <strong>Promote standby</strong> to see whether any writes get
+          replication lag. Drag <strong>Write</strong>{" "}up, switch between <strong>Async</strong>{" "}replication (fast,
+          but can lag) and <strong>Sync</strong>{" "}replication (no lag on that standby, but every write waits for it),
+          then click <strong>Fail primary</strong>{" "}and <strong>Promote standby</strong>{" "}to see whether any writes get
           lost.
         </p>
         <PostgresReplicationViz />
@@ -128,9 +128,9 @@ export default function PostgresPage() {
 
       <Section id="lifecycle" title="5. Request Lifecycle">
         <p>
-          <strong>Write:</strong> the primary applies the change, appends it to the WAL, confirms success to the
+          <strong>Write:</strong>{" "}the primary applies the change, appends it to the WAL, confirms success to the
           client, then ships that WAL entry to replicas (synchronously or asynchronously, depending on configuration).{" "}
-          <strong>Read:</strong> routed to a replica, which answers from whatever it has already applied — which can
+          <strong>Read:</strong>{" "}routed to a replica, which answers from whatever it has already applied — which can
           be slightly out of date if that replica is lagging.
         </p>
       </Section>
@@ -157,7 +157,7 @@ export default function PostgresPage() {
       <Section id="scaling" title="7. Scaling">
         <p>
           Adding replicas scales <strong>reads</strong> — in the Advanced blueprint above, going from one database
-          node to three directly grows total read capacity. It does <strong>not</strong> scale writes: in real
+          node to three directly grows total read capacity. It does <strong>not</strong>{" "}scale writes: in real
           PostgreSQL, every write still has to funnel through the one primary (the replication demo in §3 shows this
           directly — the generic traffic simulator above it can&rsquo;t). Scaling writes beyond a single machine
           requires sharding/partitioning the data instead, which is a fundamentally harder problem.
@@ -166,22 +166,22 @@ export default function PostgresPage() {
 
       <Section id="failure" title="8. Failure Scenarios">
         <p>
-          In the <strong>traffic simulator</strong> (§3): killing any one of the three database nodes — Primary or
+          In the <strong>traffic simulator</strong>{" "}(§3): killing any one of the three database nodes — Primary or
           either replica — just removes a third of total capacity; the router sends the rest of the traffic to the
           other two. This generic engine has no concept of &ldquo;the primary,&rdquo; so it treats all three
           identically.
         </p>
         <p>
-          For a real failover, use the <strong>replication demo</strong> instead: click <strong>Fail primary</strong>{" "}
+          For a real failover, use the <strong>replication demo</strong>{" "}instead: click <strong>Fail primary</strong>{" "}
           and writes stop immediately, since it really is a single point of failure for writes there. Click{" "}
-          <strong>Promote standby</strong> to run the failover — the replica that was most caught-up becomes the new
+          <strong>Promote standby</strong>{" "}to run the failover — the replica that was most caught-up becomes the new
           primary and writes resume, but any writes that hadn&rsquo;t replicated yet are reported as lost.
         </p>
       </Section>
 
       <Section id="metrics" title="9. Metrics">
         <p>
-          <strong>Replication lag</strong> is the number to watch. It tells you how far behind the primary a replica
+          <strong>Replication lag</strong>{" "}is the number to watch. It tells you how far behind the primary a replica
           is, and therefore how stale a read from that replica could be. Lag grows whenever the write rate outpaces
           how fast a replica can apply incoming WAL — the same backlog behaviour you&rsquo;d see in any queue that&rsquo;s
           filling up faster than it drains.

@@ -38,7 +38,7 @@ export default function IsolationPage() {
 
       <Section title="Definition">
         <p>
-          <strong>Isolation</strong> controls how much of one transaction&rsquo;s in-progress work another
+          <strong>Isolation</strong>{" "}controls how much of one transaction&rsquo;s in-progress work another
           transaction running at the same time is allowed to see. The SQL standard defines four levels, from loosest
           to strictest: <strong>Read Uncommitted</strong>, <strong>Read Committed</strong>, <strong>Repeatable
           Read</strong>, and <strong>Serializable</strong>. Each stricter level rules out more of the three read
@@ -57,7 +57,7 @@ export default function IsolationPage() {
 
       <Section title="The three read anomalies">
         <ul className="list-disc space-y-1 pl-5">
-          <li><strong>Dirty read</strong> — you read another transaction&rsquo;s <em>uncommitted</em> change, which may then roll back.</li>
+          <li><strong>Dirty read</strong> — you read another transaction&rsquo;s <em>uncommitted</em>{" "}change, which may then roll back.</li>
           <li><strong>Non-repeatable read</strong> — you read a row twice and get different values, because someone committed an update in between.</li>
           <li><strong>Phantom read</strong> — you run the same range query twice and new rows appear, because someone committed an insert matching your predicate.</li>
         </ul>
@@ -66,8 +66,8 @@ export default function IsolationPage() {
       <Section title="Try it">
         <p>
           Choose an isolation level and an anomaly, then run the two-transaction interleaving. The matrix shows what the
-          current level prevents (✓) versus allows (✗). Notice that at <strong>Repeatable Read</strong> and{" "}
-          <strong>Serializable</strong> the reader works from an <strong>MVCC snapshot</strong> taken when its
+          current level prevents (✓) versus allows (✗). Notice that at <strong>Repeatable Read</strong>{" "}and{" "}
+          <strong>Serializable</strong>{" "}the reader works from an <strong>MVCC snapshot</strong>{" "}taken when its
           transaction began, so concurrent commits are simply invisible to it.
         </p>
         <IsolationViz />
@@ -87,7 +87,7 @@ export default function IsolationPage() {
 
       <Section title="What MVCC does">
         <p>
-          <strong>Multi-Version Concurrency Control</strong> keeps multiple versions of each row. A writer creates a new
+          <strong>Multi-Version Concurrency Control</strong>{" "}keeps multiple versions of each row. A writer creates a new
           version instead of overwriting; each transaction reads the version that was visible at its <em>snapshot</em>.
           The payoff: <strong>readers never block writers and writers never block readers</strong>. &ldquo;Repeatable
           Read&rdquo; is really just &ldquo;every read uses the snapshot from my first statement.&rdquo;
@@ -97,7 +97,7 @@ export default function IsolationPage() {
       <Section title="Where it&rsquo;s used">
         <p>
           Every relational database lets you set a transaction&rsquo;s isolation level, typically with{" "}
-          <code>SET TRANSACTION ISOLATION LEVEL ...</code> at the start of a transaction. Defaults differ:
+          <code>SET TRANSACTION ISOLATION LEVEL ...</code>{" "}at the start of a transaction. Defaults differ:
           PostgreSQL and SQL Server default to Read Committed; MySQL&rsquo;s InnoDB engine defaults to Repeatable
           Read. Oracle only offers Read Committed (its default) and Serializable — it has no separate Repeatable Read
           level.
@@ -106,9 +106,9 @@ export default function IsolationPage() {
 
       <Section title="PostgreSQL specifics (worth knowing)">
         <ul className="list-disc space-y-1 pl-5">
-          <li>PostgreSQL has <strong>no dirty reads at all</strong> — asking for <code>READ UNCOMMITTED</code> silently gives you <code>READ COMMITTED</code> instead.</li>
-          <li>PostgreSQL&rsquo;s <strong>Repeatable Read</strong> uses snapshot isolation and also <strong>blocks phantom reads</strong> — stricter than the SQL standard requires (the standard allows phantoms at Repeatable Read; the matrix above follows the standard, not Postgres).</li>
-          <li>PostgreSQL&rsquo;s <strong>Serializable</strong> level (built with SSI, Serializable Snapshot Isolation) also catches write skew, a subtler anomaly beyond the three above. It may abort your transaction with a serialization error — when that happens, the fix is to retry the whole transaction, not treat it as a bug.</li>
+          <li>PostgreSQL has <strong>no dirty reads at all</strong> — asking for <code>READ UNCOMMITTED</code>{" "}silently gives you <code>READ COMMITTED</code>{" "}instead.</li>
+          <li>PostgreSQL&rsquo;s <strong>Repeatable Read</strong>{" "}uses snapshot isolation and also <strong>blocks phantom reads</strong> — stricter than the SQL standard requires (the standard allows phantoms at Repeatable Read; the matrix above follows the standard, not Postgres).</li>
+          <li>PostgreSQL&rsquo;s <strong>Serializable</strong>{" "}level (built with SSI, Serializable Snapshot Isolation) also catches write skew, a subtler anomaly beyond the three above. It may abort your transaction with a serialization error — when that happens, the fix is to retry the whole transaction, not treat it as a bug.</li>
         </ul>
       </Section>
 

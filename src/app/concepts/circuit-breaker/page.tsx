@@ -102,8 +102,8 @@ export default function CircuitBreakerPage() {
     .build();`}
         </pre>
         <p>
-          Always pair it with a <strong>timeout</strong> (so a hang counts as a failure instead of waiting forever)
-          and a <strong>fallback</strong> (so failing fast still returns something useful to the caller).
+          Always pair it with a <strong>timeout</strong>{" "}(so a hang counts as a failure instead of waiting forever)
+          and a <strong>fallback</strong>{" "}(so failing fast still returns something useful to the caller).
         </p>
       </Section>
 

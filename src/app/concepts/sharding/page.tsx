@@ -31,7 +31,7 @@ export default function ShardingPage() {
         <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-0.5 text-xs font-medium text-fuchsia-300">Concept</span>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50">Sharding &amp; Partitioning</h1>
         <p className="mt-2 text-slate-400">
-          One machine can&rsquo;t hold everything, so you split the data across many. <em>How</em> you split it decides
+          One machine can&rsquo;t hold everything, so you split the data across many. <em>How</em>{" "}you split it decides
           whether load stays even — and what a resharding costs.
         </p>
       </header>
@@ -39,36 +39,36 @@ export default function ShardingPage() {
       <Section title="Definition">
         <p>
           <strong>Sharding</strong> — also called horizontal partitioning — splits one big dataset across several
-          independent machines, called <strong>shards</strong>, using a <strong>shard key</strong> to decide which
+          independent machines, called <strong>shards</strong>, using a <strong>shard key</strong>{" "}to decide which
           shard each row or document belongs to. Each shard only has to handle its own slice of the data, so total
           capacity grows as you add more shards.
         </p>
         <p>
           How you pick the shard key changes everything. The two most common approaches are{" "}
-          <strong>range</strong> and <strong>hash</strong>, and they fail in very different ways.
+          <strong>range</strong>{" "}and <strong>hash</strong>, and they fail in very different ways.
         </p>
       </Section>
 
       <Section title="Try it">
         <p>
-          Switch between <strong>range</strong> and <strong>hash</strong> sharding, and between <strong>spread-out</strong>{" "}
-          and <strong>sequential</strong> keys. Watch how evenly the load lands on each shard, then press{" "}
-          <strong>+ Shard</strong> and see how many keys actually have to move.
+          Switch between <strong>range</strong>{" "}and <strong>hash</strong>{" "}sharding, and between <strong>spread-out</strong>{" "}
+          and <strong>sequential</strong>{" "}keys. Watch how evenly the load lands on each shard, then press{" "}
+          <strong>+ Shard</strong>{" "}and see how many keys actually have to move.
         </p>
         <ShardingViz />
       </Section>
 
       <Section title="Range vs hash">
         <ul className="list-disc space-y-1 pl-5">
-          <li><strong>Range</strong> keeps keys in order, so a range query (<code>BETWEEN</code>, &ldquo;last 7 days&rdquo;) only has to touch a few shards. The catch: keys that increase in a predictable way — auto-increment IDs, timestamps — all land in the newest range, piling all the write traffic onto one <strong>hot shard</strong>.</li>
-          <li><strong>Hash</strong> spreads keys out evenly no matter what the workload looks like, so there&rsquo;s no hot shard. The cost: you lose ordered range scans, and a naive <code>hash(key) % N</code> reshuffles almost every key the moment <code>N</code> changes.</li>
+          <li><strong>Range</strong>{" "}keeps keys in order, so a range query (<code>BETWEEN</code>, &ldquo;last 7 days&rdquo;) only has to touch a few shards. The catch: keys that increase in a predictable way — auto-increment IDs, timestamps — all land in the newest range, piling all the write traffic onto one <strong>hot shard</strong>.</li>
+          <li><strong>Hash</strong>{" "}spreads keys out evenly no matter what the workload looks like, so there&rsquo;s no hot shard. The cost: you lose ordered range scans, and a naive <code>hash(key) % N</code>{" "}reshuffles almost every key the moment <code>N</code>{" "}changes.</li>
         </ul>
       </Section>
 
       <Section title="The resharding problem">
         <p>
-          With plain modulo hashing, adding just one shard changes <code>hash(key) % N</code> for nearly every key —
-          only about 1-in-<code>N</code> keys happen to land on the same shard by coincidence, so almost the entire
+          With plain modulo hashing, adding just one shard changes <code>hash(key) % N</code>{" "}for nearly every key —
+          only about 1-in-<code>N</code>{" "}keys happen to land on the same shard by coincidence, so almost the entire
           dataset has to move at once.{" "}
           <Link href="/concepts/consistent-hashing" className="text-sky-400 hover:text-sky-300">Consistent hashing</Link>{" "}
           fixes exactly this: adding or removing a shard only moves about 1/N of the keys, not nearly all of them.
@@ -88,7 +88,7 @@ export default function ShardingPage() {
       <Section title="Where it&rsquo;s used">
         <p>
           Any system with more data or traffic than one machine can comfortably hold:{" "}
-          <Link href="/technologies/mongodb" className="text-sky-400 hover:text-sky-300">MongoDB</Link> and Cassandra
+          <Link href="/technologies/mongodb" className="text-sky-400 hover:text-sky-300">MongoDB</Link>{" "}and Cassandra
           shard natively, as do large-scale SQL deployments using tools like Vitess (for MySQL) or Citus (for
           PostgreSQL), and plenty of systems that manually split data by customer ID or region.
         </p>

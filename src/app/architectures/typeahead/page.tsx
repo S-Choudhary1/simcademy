@@ -60,7 +60,7 @@ export default function TypeaheadPage() {
 
       <Section title="3. Interactive simulation">
         <p>
-          Keystrokes → <strong>API Gateway</strong> (a single front door that routes each request to the right
+          Keystrokes → <strong>API Gateway</strong>{" "}(a single front door that routes each request to the right
           backend service) → Autocomplete Service → <strong>Prefix Cache</strong> → Search Index. Because popular
           prefixes repeat across users, most queries are cache hits served in under a millisecond — only the long
           tail of rare prefixes reaches the (trie / inverted-index) search backend. Push the keystroke rate up below
@@ -71,7 +71,7 @@ export default function TypeaheadPage() {
 
       <Section title="4. How the suggestions are built">
         <p>
-          The index is usually a <strong>trie</strong> (a tree where every path from the root spells out a prefix,
+          The index is usually a <strong>trie</strong>{" "}(a tree where every path from the root spells out a prefix,
           one letter at a time), where each node already stores the top-K completions for that prefix. That means a
           lookup is just a short walk down the tree — no ranking happens at query time. The trie is rebuilt offline
           from search logs (weighted by how often each suggestion gets picked), then loaded fully into memory.

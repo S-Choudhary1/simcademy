@@ -91,20 +91,20 @@ export default function KafkaPage() {
         <p>
           Kafka flips this around: a service publishes an event once, and any number of other services can subscribe
           to it independently, with no direct connection between them. This decouples producers from consumers in
-          three ways: in <strong>time</strong> (a message waits in Kafka until a consumer is ready), in{" "}
-          <strong>space</strong> (producer and consumer never talk to each other directly), and in{" "}
-          <strong>rate</strong> (each consumer reads only as fast as it can).
+          three ways: in <strong>time</strong>{" "}(a message waits in Kafka until a consumer is ready), in{" "}
+          <strong>space</strong>{" "}(producer and consumer never talk to each other directly), and in{" "}
+          <strong>rate</strong>{" "}(each consumer reads only as fast as it can).
         </p>
       </Section>
 
       <Section id="simulation" title="3. Interactive Simulation">
         <p>
-          Press <strong>Play</strong>. At the <strong>Beginner</strong> level one producer publishes into the broker
-          and a single consumer drains it; switch to <strong>Intermediate</strong> for two consumers sharing the
-          load, or <strong>Advanced</strong> for a full ingest-API-plus-three-consumers pipeline. Drag{" "}
-          <strong>Traffic</strong> up past what the consumer(s) can process and watch the broker&rsquo;s{" "}
-          <strong>Backlog (lag)</strong> climb in its Inspector panel. Select a consumer node and hit{" "}
-          <strong>Kill</strong> in the Chaos panel to simulate it going down: the broker&rsquo;s remaining consume
+          Press <strong>Play</strong>. At the <strong>Beginner</strong>{" "}level one producer publishes into the broker
+          and a single consumer drains it; switch to <strong>Intermediate</strong>{" "}for two consumers sharing the
+          load, or <strong>Advanced</strong>{" "}for a full ingest-API-plus-three-consumers pipeline. Drag{" "}
+          <strong>Traffic</strong>{" "}up past what the consumer(s) can process and watch the broker&rsquo;s{" "}
+          <strong>Backlog (lag)</strong>{" "}climb in its Inspector panel. Select a consumer node and hit{" "}
+          <strong>Kill</strong>{" "}in the Chaos panel to simulate it going down: the broker&rsquo;s remaining consume
           capacity drops, so the backlog grows faster and the survivor&rsquo;s utilisation rises to cover the gap.
         </p>
         <TechSimulator tech="kafka" />
@@ -112,7 +112,7 @@ export default function KafkaPage() {
         <h3 className="mt-6 text-base font-semibold text-slate-100">Internals: partitions, offsets &amp; rebalancing</h3>
         <p>
           A closer look inside the broker. Every record the producer writes gets a partition and a steadily
-          increasing <strong>offset</strong> within that partition. Each <strong>consumer group</strong> reads the
+          increasing <strong>offset</strong>{" "}within that partition. Each <strong>consumer group</strong>{" "}reads the
           whole topic independently and keeps its own offset per partition — add a second group, and it re-reads the
           same records from the start, completely separately from the first group.
         </p>
@@ -128,9 +128,9 @@ export default function KafkaPage() {
 
       <Section id="architecture" title="4. Architecture">
         <p>
-          A <strong>topic</strong> is split into <strong>partitions</strong> — these are the units Kafka uses for both
-          parallelism and ordering. Kafka only guarantees message order <em>within</em> a single partition, never
-          across the whole topic. Each partition lives on a <strong>broker</strong> (one Kafka server); a cluster of
+          A <strong>topic</strong>{" "}is split into <strong>partitions</strong> — these are the units Kafka uses for both
+          parallelism and ordering. Kafka only guarantees message order <em>within</em>{" "}a single partition, never
+          across the whole topic. Each partition lives on a <strong>broker</strong>{" "}(one Kafka server); a cluster of
           brokers spreads partitions, and their replica copies, across machines. Inside a consumer group, each
           partition is handed to exactly one consumer — so once you have as many consumers as partitions, adding more
           consumers buys you no extra throughput; they just sit idle.
@@ -163,7 +163,7 @@ export default function KafkaPage() {
           </li>
           <li>
             <strong>Offsets</strong> — a per-partition, per-group cursor stored in the internal{" "}
-            <code>__consumer_offsets</code> topic.
+            <code>__consumer_offsets</code>{" "}topic.
           </li>
         </ul>
       </Section>
@@ -179,7 +179,7 @@ export default function KafkaPage() {
 
       <Section id="failure" title="8. Failure Scenarios">
         <p>
-          In the partition demo above, click <strong>− consumer</strong> on a group with more than one member: its
+          In the partition demo above, click <strong>− consumer</strong>{" "}on a group with more than one member: its
           partitions get handed to the survivors — a <strong>rebalance</strong>. Each survivor now owns more
           partitions, so its share of the throughput drops and lag climbs. In production, a rebalance can also
           briefly pause the whole group while membership is re-coordinated (newer cooperative rebalancing strategies
@@ -240,7 +240,7 @@ export default function KafkaPage() {
           <li>Why can you not have more useful consumers than partitions in a group?</li>
           <li>How does Kafka guarantee ordering, and what is its scope?</li>
           <li>What exactly is consumer lag, and how would you fix sustained lag?</li>
-          <li>Explain <code>acks=0/1/all</code> and the durability vs latency trade-off.</li>
+          <li>Explain <code>acks=0/1/all</code>{" "}and the durability vs latency trade-off.</li>
         </ol>
       </Section>
 
@@ -260,7 +260,7 @@ for (const msg of await consumer.poll()) handle(msg)
 await consumer.commit()`}
         </pre>
         <p>
-          The snippet above shows the <em>shape</em> of the operations, not one specific library&rsquo;s exact method
+          The snippet above shows the <em>shape</em>{" "}of the operations, not one specific library&rsquo;s exact method
           names — those differ a bit across clients (kafkajs, the Confluent clients, the Java client, etc.), so check
           your client&rsquo;s docs for the literal API.
         </p>

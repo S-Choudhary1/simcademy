@@ -64,7 +64,7 @@ export default function OutboxPage() {
         <p>
           Write the event into an <strong>outbox table</strong>, inside the very same database transaction as the
           business data. Now the order row and the &ldquo;please publish this&rdquo; row either both get saved or
-          neither does — the database guarantees that for you. A separate <strong>relay</strong> process then reads
+          neither does — the database guarantees that for you. A separate <strong>relay</strong>{" "}process then reads
           the not-yet-sent rows out of the outbox table, publishes each one to the broker, and marks it sent. That
           relay can be a simple poller that checks the table every few seconds, or a change-data-capture (CDC) tool
           like Debezium that watches the database&rsquo;s own write-ahead log — its internal record of every change —
@@ -75,7 +75,7 @@ export default function OutboxPage() {
 
       <Section title="Try it — inject a failure at every point">
         <p>
-          Switch between <strong>Naive dual-write</strong> and <strong>Transactional Outbox</strong>, pick a failure
+          Switch between <strong>Naive dual-write</strong>{" "}and <strong>Transactional Outbox</strong>, pick a failure
           scenario, and press Run. Watch where each approach ends up consistent — and where the naive version
           silently loses an event.
         </p>
@@ -84,13 +84,13 @@ export default function OutboxPage() {
 
       <Section title="What the failures teach">
         <ul className="list-disc space-y-1 pl-5">
-          <li><strong>Naive, crash after DB write:</strong> the order is saved, but the event is lost — a permanent inconsistency.</li>
-          <li><strong>Outbox, transaction fails:</strong> nothing is saved and nothing is promised — the transaction keeps both sides consistent.</li>
-          <li><strong>Outbox, broker down:</strong> the row sits as PENDING; the relay just keeps retrying until it gets delivered.</li>
-          <li><strong>Outbox, relay crashes right after publishing:</strong> it republishes on restart — that&rsquo;s a duplicate, never a loss.</li>
+          <li><strong>Naive, crash after DB write:</strong>{" "}the order is saved, but the event is lost — a permanent inconsistency.</li>
+          <li><strong>Outbox, transaction fails:</strong>{" "}nothing is saved and nothing is promised — the transaction keeps both sides consistent.</li>
+          <li><strong>Outbox, broker down:</strong>{" "}the row sits as PENDING; the relay just keeps retrying until it gets delivered.</li>
+          <li><strong>Outbox, relay crashes right after publishing:</strong>{" "}it republishes on restart — that&rsquo;s a duplicate, never a loss.</li>
         </ul>
         <p>
-          So the outbox gives you <strong>at-least-once</strong> delivery: events are never lost, but they can
+          So the outbox gives you <strong>at-least-once</strong>{" "}delivery: events are never lost, but they can
           occasionally arrive twice. That&rsquo;s why consumers reading from it must be{" "}
           <strong>idempotent</strong> — they should dedupe by event id.
         </p>
@@ -131,7 +131,7 @@ COMMIT;
         </pre>
         <ul className="list-disc space-y-1 pl-5">
           <li>Consumers must dedupe by event id, since delivery out of the outbox is at-least-once, not exactly-once.</li>
-          <li>Prune or archive rows once <code>sent = true</code> so the table doesn&rsquo;t grow forever.</li>
+          <li>Prune or archive rows once <code>sent = true</code>{" "}so the table doesn&rsquo;t grow forever.</li>
         </ul>
       </Section>
 

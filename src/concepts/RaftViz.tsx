@@ -199,9 +199,9 @@ export function RaftViz() {
       </div>
 
       <p className="mt-2 text-[11px] leading-snug text-slate-500">
-        Try it: <strong className="text-slate-400">Crash the leader</strong> (click it) — after a follower&rsquo;s election
+        Try it: <strong className="text-slate-400">Crash the leader</strong>{" "}(click it) — after a follower&rsquo;s election
         timeout, it becomes a candidate, wins a majority of votes, and takes over at a higher term.{" "}
-        <strong className="text-slate-400">Append entries</strong> and watch them go amber→green as they reach a majority
+        <strong className="text-slate-400">Append entries</strong>{" "}and watch them go amber→green as they reach a majority
         (committed). Crash servers until fewer than {MAJORITY} remain and the cluster loses quorum — nothing commits.
       </p>
       <GuidedTour tourId="raft" steps={TOUR} autoStart={false} />

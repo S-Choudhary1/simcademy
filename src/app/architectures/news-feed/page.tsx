@@ -46,15 +46,15 @@ export default function NewsFeedPage() {
 
       <Section title="2. Fan-out on write vs on read">
         <p>
-          <strong>Fan-out on read</strong> builds the timeline at read time: when you open the app, the system looks
+          <strong>Fan-out on read</strong>{" "}builds the timeline at read time: when you open the app, the system looks
           up everyone you follow, fetches their recent posts, and merges and sorts them on the spot. Simple to build,
           but every single scroll triggers a big, expensive query — that gets brutal at scale.
         </p>
         <p>
-          <strong>Fan-out on write</strong> flips the order: the expensive work happens once, right when a post is
+          <strong>Fan-out on write</strong>{" "}flips the order: the expensive work happens once, right when a post is
           created. The system immediately pushes (&ldquo;fans out&rdquo;) that new post into a separate, precomputed
           feed for every one of the poster&rsquo;s followers — commonly a{" "}
-          <Link href="/technologies/redis" className="text-sky-400 hover:text-sky-300">Redis</Link> list, a simple
+          <Link href="/technologies/redis" className="text-sky-400 hover:text-sky-300">Redis</Link>{" "}list, a simple
           ordered list kept per user. Reading your feed then just means fetching that already-built list — a cheap,
           already-computed read, not a live computation done on the spot. This simulation models that read path.
         </p>
@@ -74,7 +74,7 @@ export default function NewsFeedPage() {
         <p>
           Fan-out on write breaks down for accounts with tens of millions of followers — one post from them would
           trigger tens of millions of feed-list writes all at once. The standard fix is a{" "}
-          <strong>hybrid</strong> approach: fan out on write for ordinary users, but for celebrity accounts, skip the
+          <strong>hybrid</strong>{" "}approach: fan out on write for ordinary users, but for celebrity accounts, skip the
           push entirely. Instead, pull their recent posts at read time and merge them into the follower&rsquo;s
           otherwise-precomputed feed. This keeps reads cheap for the common case while keeping write cost bounded for
           the rare outliers.

@@ -45,7 +45,7 @@ export default function RabbitMQPage() {
         <p>
           RabbitMQ is a &ldquo;smart broker&rdquo; sitting between producers and consumers. Producers publish messages
           to an <strong>exchange</strong>, which routes each one into one or more <strong>queues</strong>, where{" "}
-          <strong>consumers</strong> pick them up. Unlike Kafka&rsquo;s replayable log, RabbitMQ is built for
+          <strong>consumers</strong>{" "}pick them up. Unlike Kafka&rsquo;s replayable log, RabbitMQ is built for
           per-message delivery, acknowledgements, and flexible routing rules — not for replaying old history.
         </p>
       </Section>
@@ -54,15 +54,15 @@ export default function RabbitMQPage() {
         <p>
           It lets a fast producer hand off work without waiting for it to finish. The producer just drops a message
           in a queue and moves on. Consumers process messages at their own pace, and if they fall behind, the queue
-          simply holds the backlog — the queue&rsquo;s length <em>is</em> the backlog.
+          simply holds the backlog — the queue&rsquo;s length <em>is</em>{" "}the backlog.
         </p>
       </Section>
 
       <Section id="simulation" title="3. Interactive Simulation">
         <p>
-          <strong>Beginner</strong> is a single work queue — watch the backlog grow when producers outpace the
-          consumer. <strong>Intermediate</strong> adds competing consumers that share the load between them.{" "}
-          <strong>Advanced</strong> shows an exchange routing messages to two separate queues, each with its own
+          <strong>Beginner</strong>{" "}is a single work queue — watch the backlog grow when producers outpace the
+          consumer. <strong>Intermediate</strong>{" "}adds competing consumers that share the load between them.{" "}
+          <strong>Advanced</strong>{" "}shows an exchange routing messages to two separate queues, each with its own
           workers.
         </p>
         <TechSimulator tech="rabbitmq" />
@@ -70,8 +70,8 @@ export default function RabbitMQPage() {
         <h3 className="mt-6 text-base font-semibold text-slate-100">Internals: acks &amp; dead-letter queue</h3>
         <p>
           What happens when a consumer can&rsquo;t process a message? With the consumer set to fail, each message is{" "}
-          <strong>nacked</strong> (negatively acknowledged) and retried. Once it&rsquo;s been retried the configured
-          number of times, it gets routed to a <strong>dead-letter queue</strong> instead — this keeps one
+          <strong>nacked</strong>{" "}(negatively acknowledged) and retried. Once it&rsquo;s been retried the configured
+          number of times, it gets routed to a <strong>dead-letter queue</strong>{" "}instead — this keeps one
           &ldquo;poison message&rdquo; from blocking the whole queue forever. Flip the consumer back to healthy to
           drain the rest normally, with each success sending a plain <strong>ack</strong>.
         </p>
@@ -96,7 +96,7 @@ export default function RabbitMQPage() {
 
       <Section id="metrics" title="6. Metrics">
         <p>
-          <strong>Queue backlog</strong> (how many messages are waiting) is the number to watch, alongside how busy
+          <strong>Queue backlog</strong>{" "}(how many messages are waiting) is the number to watch, alongside how busy
           your consumers are. If the backlog keeps growing instead of staying flat, you need more consumers or faster
           processing.
         </p>

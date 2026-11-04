@@ -98,7 +98,7 @@ export function RetryBackoffViz() {
       <p className="mt-3 text-[12px] leading-snug text-slate-400">{meta.note}</p>
       <p className="mt-1 text-[11px] leading-snug text-slate-500">
         The tell-tale sign is the load histogram: without jitter, the bars spike because every client retries on the same
-        schedule — the <strong className="text-amber-300">thundering herd</strong> that keeps a recovering service pinned. Jitter
+        schedule — the <strong className="text-amber-300">thundering herd</strong>{" "}that keeps a recovering service pinned. Jitter
         turns those spikes into a flat, survivable trickle. Always cap retries and add jitter.
       </p>
 

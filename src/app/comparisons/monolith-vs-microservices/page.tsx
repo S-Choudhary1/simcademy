@@ -33,8 +33,8 @@ export default function MonolithVsMicroservicesPage() {
       </Lede>
 
       <Callout>
-        A <strong>monolith</strong> is one deployable unit: simple to build, test, and run, but everything scales and
-        ships together. <strong>Microservices</strong> split the system into independently deployable services owned by
+        A <strong>monolith</strong>{" "}is one deployable unit: simple to build, test, and run, but everything scales and
+        ships together. <strong>Microservices</strong>{" "}split the system into independently deployable services owned by
         different teams — buying autonomy and targeted scaling at the price of network latency, partial failure,
         eventual consistency, and a lot of operational machinery.
       </Callout>
@@ -100,7 +100,7 @@ export default function MonolithVsMicroservicesPage() {
         ]}
       />
       <P>
-        The honest guidance: <strong>start with a (modular) monolith</strong> and extract services only when a concrete
+        The honest guidance: <strong>start with a (modular) monolith</strong>{" "}and extract services only when a concrete
         pain — team contention, a wildly different scaling profile — forces your hand. Adopting microservices before you
         have that pain buys you distributed-systems problems with none of the benefits.
       </P>

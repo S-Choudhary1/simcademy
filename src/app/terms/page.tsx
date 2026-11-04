@@ -37,7 +37,7 @@ export default function TermsPage() {
       <Clause n={2} title="Educational use — no warranty of accuracy">
         <p>
           We work hard to keep our content and simulations accurate, but they are simplified models intended to teach.
-          They are <strong>not</strong> a substitute for professional engineering judgment, official documentation, or
+          They are <strong>not</strong>{" "}a substitute for professional engineering judgment, official documentation, or
           production benchmarks. Do not rely on the Service for architecture, financial, legal, or operational decisions
           without independent verification. The Service is provided &ldquo;as is&rdquo; and &ldquo;as available,&rdquo;
           without warranties of any kind, express or implied.

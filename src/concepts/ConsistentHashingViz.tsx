@@ -126,7 +126,7 @@ export function ConsistentHashingViz() {
   return (
     <div className="not-prose rounded-xl border border-slate-800 bg-slate-950/60 p-4">
       <p className="mb-3 text-[13px] leading-snug text-slate-400">
-        <strong className="text-slate-300">The problem:</strong> with plain <code>hash(key) % N</code>, changing the
+        <strong className="text-slate-300">The problem:</strong>{" "}with plain <code>hash(key) % N</code>, changing the
         server count N re-hashes almost every key — a cache-wide stampede. Consistent hashing puts keys and servers on a
         ring, so adding/removing a server only moves the keys in one small arc.
       </p>

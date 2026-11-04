@@ -152,8 +152,8 @@ export function IndexWriteViz({ db }: { db: DB }) {
   return (
     <div className="not-prose rounded-xl border border-slate-800 bg-slate-950/60 p-4">
       <p className="mb-3 text-[13px] leading-snug text-slate-400">
-        A write (<code>INSERT</code>) has to keep the index sorted <em>and</em> balanced. The value descends the B⁺-tree
-        to the correct <strong>leaf</strong>; if that leaf is full it <strong>splits</strong> and pushes a separator up —
+        A write (<code>INSERT</code>) has to keep the index sorted <em>and</em>{" "}balanced. The value descends the B⁺-tree
+        to the correct <strong>leaf</strong>; if that leaf is full it <strong>splits</strong>{" "}and pushes a separator up —
         occasionally growing the tree a level. Both {t.name === "PostgreSQL" ? "Postgres" : "Mongo"} and the other engine
         use a B⁺-tree, so the mechanics below are identical; only the row pointer differs
         (<code className={accentText}>{t.ptr}</code>).

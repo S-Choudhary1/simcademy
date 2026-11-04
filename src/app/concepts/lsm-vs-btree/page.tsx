@@ -41,14 +41,14 @@ export default function LsmBtreePage() {
           Every database has to decide how it stores and finds data on disk. There are two popular designs.
         </p>
         <p>
-          A <strong>B-tree</strong> keeps every key in one sorted structure and updates it <em>in place</em>: when you
+          A <strong>B-tree</strong>{" "}keeps every key in one sorted structure and updates it <em>in place</em>: when you
           write a value, the database finds the exact page on disk and rewrites it right there.
         </p>
         <p>
-          An <strong>LSM-tree</strong> (Log-Structured Merge-tree) never updates in place. Every write is{" "}
-          <em>appended</em> to a small in-memory structure called a <strong>memtable</strong>. Once that fills up, it&rsquo;s
+          An <strong>LSM-tree</strong>{" "}(Log-Structured Merge-tree) never updates in place. Every write is{" "}
+          <em>appended</em>{" "}to a small in-memory structure called a <strong>memtable</strong>. Once that fills up, it&rsquo;s
           flushed to disk as a new, unchangeable file called an <strong>SSTable</strong>. A background process called{" "}
-          <strong>compaction</strong> later merges old SSTables together and discards outdated values.
+          <strong>compaction</strong>{" "}later merges old SSTables together and discards outdated values.
         </p>
       </Section>
 
@@ -86,16 +86,16 @@ export default function LsmBtreePage() {
         <ul className="list-disc space-y-1 pl-5">
           <li><strong>LSM-trees are faster to write to</strong> — appending in memory, then sequentially to disk, is about as cheap as writing gets, since there&rsquo;s no existing page to find and rewrite.</li>
           <li><strong>B-trees are faster to read from</strong> — a key lives in exactly one place, so both a single lookup and a range of keys take one direct path.</li>
-          <li><strong>LSM-tree reads pay a cost</strong>: a key could be sitting in the memtable or in any of several SSTables. <strong>Bloom filters</strong> (a small structure that quickly rules out files that definitely don&rsquo;t contain a key) and background compaction keep this manageable, at the cost of extra disk I/O and space while compaction runs.</li>
+          <li><strong>LSM-tree reads pay a cost</strong>: a key could be sitting in the memtable or in any of several SSTables. <strong>Bloom filters</strong>{" "}(a small structure that quickly rules out files that definitely don&rsquo;t contain a key) and background compaction keep this manageable, at the cost of extra disk I/O and space while compaction runs.</li>
           <li><strong>B-tree writes pay a cost too</strong>: updating a page in place is random I/O, and the database still needs a write-ahead log for crash recovery. Frequent small updates to the same page cause <strong>write amplification</strong> — more bytes get written to disk than the size of your actual change.</li>
         </ul>
       </Section>
 
       <Section title="Where it&rsquo;s used">
         <p>
-          <strong>LSM-tree:</strong> Cassandra, ScyllaDB, RocksDB, LevelDB, HBase, and most write-heavy time-series
-          databases. <strong>B-tree family:</strong> PostgreSQL, MySQL/InnoDB, and MongoDB&rsquo;s WiredTiger engine.
-          In practice, almost all of these specifically implement the <strong>B⁺-tree</strong> variant — values live
+          <strong>LSM-tree:</strong>{" "}Cassandra, ScyllaDB, RocksDB, LevelDB, HBase, and most write-heavy time-series
+          databases. <strong>B-tree family:</strong>{" "}PostgreSQL, MySQL/InnoDB, and MongoDB&rsquo;s WiredTiger engine.
+          In practice, almost all of these specifically implement the <strong>B⁺-tree</strong>{" "}variant — values live
           only in linked leaf pages, never in the upper levels — see{" "}
           <Link href="/concepts/postgresql-indexing" className="text-sky-400 hover:text-sky-300">PostgreSQL indexing</Link>{" "}
           and <Link href="/concepts/mongodb-indexing" className="text-sky-400 hover:text-sky-300">MongoDB indexing</Link>{" "}

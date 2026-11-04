@@ -47,8 +47,8 @@ export default function DeliverySemanticsPage() {
 
       <Section title="Try it">
         <p>
-          Pick a guarantee and a failure to inject — a <strong>lost ack</strong> (the classic cause of duplicates) or
-          a <strong>lost message</strong> (the classic cause of loss) — then run it and watch the <em>effect count</em>:
+          Pick a guarantee and a failure to inject — a <strong>lost ack</strong>{" "}(the classic cause of duplicates) or
+          a <strong>lost message</strong>{" "}(the classic cause of loss) — then run it and watch the <em>effect count</em>:
           how many times the message actually changed something.
         </p>
         <DeliverySemanticsViz />
@@ -56,8 +56,8 @@ export default function DeliverySemanticsPage() {
 
       <Section title="Analogy">
         <p>
-          Mailing a letter. <strong>At-most-once</strong> is dropping it in a mailbox and never checking — if it&rsquo;s
-          lost, you&rsquo;ll never know. <strong>At-least-once</strong> is mailing copy after copy until you get a
+          Mailing a letter. <strong>At-most-once</strong>{" "}is dropping it in a mailbox and never checking — if it&rsquo;s
+          lost, you&rsquo;ll never know. <strong>At-least-once</strong>{" "}is mailing copy after copy until you get a
           signed receipt back — but if the receipt itself gets lost in the mail (not the letter), you&rsquo;ll send
           one more copy than you needed to, and the recipient ends up with two letters. <strong>Exactly-once</strong>,
           in practice, means the recipient keeps a logbook of letter IDs and throws away any letter they&rsquo;ve
@@ -87,8 +87,8 @@ export default function DeliverySemanticsPage() {
       <Section title="How to implement">
         <ul className="list-disc space-y-1 pl-5">
           <li>Pick the guarantee based on what a duplicate or a loss actually costs you: a page-view counter can tolerate occasional loss (at-most-once); a payment or an order can&rsquo;t (needs at-least-once).</li>
-          <li>To get at-least-once with a queue or broker, acknowledge (or commit the offset for) a message only <em>after</em> you&rsquo;ve finished processing it, not before — if you crash in between, the broker redelivers it.</li>
-          <li>To get the practical effect of exactly-once, pair at-least-once delivery with a dedup step in the consumer — see <Link href="/concepts/idempotency" className="text-sky-400 hover:text-sky-300">Idempotency</Link> and <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">Transactional Outbox</Link> for the actual mechanics.</li>
+          <li>To get at-least-once with a queue or broker, acknowledge (or commit the offset for) a message only <em>after</em>{" "}you&rsquo;ve finished processing it, not before — if you crash in between, the broker redelivers it.</li>
+          <li>To get the practical effect of exactly-once, pair at-least-once delivery with a dedup step in the consumer — see <Link href="/concepts/idempotency" className="text-sky-400 hover:text-sky-300">Idempotency</Link>{" "}and <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">Transactional Outbox</Link>{" "}for the actual mechanics.</li>
         </ul>
       </Section>
 

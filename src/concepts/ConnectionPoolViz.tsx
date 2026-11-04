@@ -143,7 +143,7 @@ export function ConnectionPoolViz() {
       <p className="mt-2 text-[11px] leading-snug text-slate-500">
         Push Requests above what the pool can serve (pool × 1/query-time) and the queue fills and requests start timing
         out — pool exhaustion. Raise the pool to drain it. But a huge pool just moves the overload onto the database:
-        the pool exists to <em>bound</em> concurrency.
+        the pool exists to <em>bound</em>{" "}concurrency.
       </p>
       <GuidedTour tourId="connection-pool" steps={TOUR} autoStart={false} />
     </div>

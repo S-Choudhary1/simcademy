@@ -52,11 +52,11 @@ export default function ConsistentHashingPage() {
 
       <Section title="The problem it solves">
         <p>
-          The naive approach is <code>node = hash(key) % N</code>, where <code>N</code> is the number of nodes. The
-          problem: the moment <code>N</code> changes — a node is added or removed — almost every key&rsquo;s answer to
+          The naive approach is <code>node = hash(key) % N</code>, where <code>N</code>{" "}is the number of nodes. The
+          problem: the moment <code>N</code>{" "}changes — a node is added or removed — almost every key&rsquo;s answer to
           that formula changes too, even though most nodes never moved. For a cache, that means the entire cache goes
           cold at once. Consistent hashing keeps the circle mostly unchanged when a node joins or leaves, so only
-          about 1-in-<code>N</code> keys ever need to move.
+          about 1-in-<code>N</code>{" "}keys ever need to move.
         </p>
       </Section>
 

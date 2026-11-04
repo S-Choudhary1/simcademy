@@ -49,7 +49,7 @@ export default function PaymentGatewayPage() {
         <ul className="list-disc space-y-1 pl-5">
           <li>Authorize and capture a payment against a payment provider (e.g. a card network or bank).</li>
           <li>Record every state change in an immutable <strong>ledger</strong> — an append-only log of exactly what happened, in order, that is never edited after the fact.</li>
-          <li>Notify merchants of the result reliably, usually via a <strong>webhook</strong> (the gateway calling back to a URL the merchant registered).</li>
+          <li>Notify merchants of the result reliably, usually via a <strong>webhook</strong>{" "}(the gateway calling back to a URL the merchant registered).</li>
         </ul>
       </Section>
 
@@ -63,7 +63,7 @@ export default function PaymentGatewayPage() {
 
       <Section title="4. Interactive Architecture">
         <p>
-          A <strong>rate limiter</strong> sits in front of the payment service, admitting requests up to a fixed rate
+          A <strong>rate limiter</strong>{" "}sits in front of the payment service, admitting requests up to a fixed rate
           and rejecting the rest with an HTTP 429 (&ldquo;too many requests&rdquo;) response — push the traffic above
           its limit in the simulation and watch it shed the excess load to protect the ledger database. Every
           component downstream of the limiter is sized for safety and correctness, not for squeezing out maximum
@@ -74,10 +74,10 @@ export default function PaymentGatewayPage() {
 
       <Section title="5. Request Flow">
         <p>
-          <strong>Charge:</strong> client → rate limiter → gateway → payment service. The service first checks an{" "}
-          <strong>idempotency key</strong> (a unique id the client generates once and resends unchanged on every
+          <strong>Charge:</strong>{" "}client → rate limiter → gateway → payment service. The service first checks an{" "}
+          <strong>idempotency key</strong>{" "}(a unique id the client generates once and resends unchanged on every
           retry, so the server can recognize &ldquo;I&rsquo;ve already handled this exact request&rdquo;), then calls
-          the payment provider, writes the result to the ledger, and — in that <em>same</em> database transaction —
+          the payment provider, writes the result to the ledger, and — in that <em>same</em>{" "}database transaction —
           writes an outbox event. A separate relay process later publishes the merchant webhook from that event.
         </p>
       </Section>
@@ -104,7 +104,7 @@ export default function PaymentGatewayPage() {
         <p>
           The nightmare scenario is a crash between successfully charging the provider and writing that result to the
           ledger — handled with{" "}
-          <Link href="/concepts/idempotency" className="text-sky-400 hover:text-sky-300">idempotency keys</Link> and
+          <Link href="/concepts/idempotency" className="text-sky-400 hover:text-sky-300">idempotency keys</Link>{" "}and
           the{" "}
           <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">transactional outbox</Link>, so a
           retried request is safe and a webhook is never silently lost. Calls to the payment provider itself are
@@ -118,14 +118,14 @@ export default function PaymentGatewayPage() {
         <p>
           A <Link href="/concepts/rate-limiting" className="text-sky-400 hover:text-sky-300">rate limiter</Link>{" "}
           (often backed by Redis), an API gateway, an idempotent payment service, and a strongly consistent{" "}
-          <Link href="/technologies/postgresql" className="text-sky-400 hover:text-sky-300">PostgreSQL</Link> ledger
+          <Link href="/technologies/postgresql" className="text-sky-400 hover:text-sky-300">PostgreSQL</Link>{" "}ledger
           with an outbox relay publishing to a message broker.
         </p>
       </Section>
 
       <Section title="10. How to build it">
         <p>
-          Claim the idempotency key <em>before</em> calling the provider — not after — so two concurrent retries with
+          Claim the idempotency key <em>before</em>{" "}calling the provider — not after — so two concurrent retries with
           the same key can&rsquo;t both slip through and charge twice:
         </p>
         <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">
@@ -150,7 +150,7 @@ COMMIT;
 // a relay publishes the merchant webhook from the outbox (at-least-once)`}
         </pre>
         <p>
-          Checking &ldquo;have I seen this key?&rdquo; and only <em>afterwards</em> recording it is a classic race
+          Checking &ldquo;have I seen this key?&rdquo; and only <em>afterwards</em>{" "}recording it is a classic race
           condition — two retries can both pass the check before either one finishes. Claiming the key first (with a
           unique constraint doing the hard work of rejecting duplicates atomically) is what real payment APIs, like
           Stripe&rsquo;s, do to actually close that gap. This is{" "}

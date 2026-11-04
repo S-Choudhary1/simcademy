@@ -22,7 +22,7 @@ export default function PrivacyPage() {
       <p className="mt-2 text-sm text-slate-500">Last updated: July 2026</p>
 
       <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900/50 p-4 text-[15px] leading-relaxed text-slate-300">
-        <strong className="text-slate-100">The short version:</strong> Simcademy is a learning site. You don&rsquo;t need
+        <strong className="text-slate-100">The short version:</strong>{" "}Simcademy is a learning site. You don&rsquo;t need
         an account to use it, we don&rsquo;t sell your data, and the simulations run in your browser.
       </div>
 

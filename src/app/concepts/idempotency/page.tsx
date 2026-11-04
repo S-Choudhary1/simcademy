@@ -39,9 +39,9 @@ export default function IdempotencyPage() {
 
       <Section title="Definition">
         <p>
-          An operation is <strong>idempotent</strong> if doing it once or doing it five times leaves things in
-          exactly the same state. <code>GET</code> and <code>PUT</code> requests are naturally idempotent, but{" "}
-          <code>POST /charges</code> is not — sending it twice charges the customer twice. We make a write like that
+          An operation is <strong>idempotent</strong>{" "}if doing it once or doing it five times leaves things in
+          exactly the same state. <code>GET</code>{" "}and <code>PUT</code>{" "}requests are naturally idempotent, but{" "}
+          <code>POST /charges</code>{" "}is not — sending it twice charges the customer twice. We make a write like that
           safe to retry by having the client attach an <strong>idempotency key</strong>: a unique ID the server can
           use to recognise &ldquo;this is a retry of a request I&rsquo;ve already handled.&rdquo;
         </p>
@@ -51,7 +51,7 @@ export default function IdempotencyPage() {
         <p>
           Networks are unreliable. A client sends a request, the response gets lost on the way back, and the client
           — not knowing whether the request actually worked — retries it. But the first request may well have
-          already succeeded. Any <strong>at-least-once</strong> system (message queues, webhooks, mobile apps on
+          already succeeded. Any <strong>at-least-once</strong>{" "}system (message queues, webhooks, mobile apps on
           flaky networks) guarantees this will happen sometimes. Without idempotency, that turns into double charges,
           double orders, or double emails.
         </p>
@@ -77,7 +77,7 @@ export default function IdempotencyPage() {
 
       <Section title="Where it&rsquo;s used">
         <p>
-          Payment APIs — Stripe&rsquo;s <code>Idempotency-Key</code> header is the canonical real-world example —
+          Payment APIs — Stripe&rsquo;s <code>Idempotency-Key</code>{" "}header is the canonical real-world example —
           along with webhook handlers (which must tolerate the sender retrying a delivery), mobile apps retrying
           requests over flaky networks, and any consumer reading from an at-least-once message queue.
         </p>
@@ -102,7 +102,7 @@ return result`}
         </pre>
         <p>
           That get-then-set is not atomic on its own — use a unique constraint on the key (or Redis <code>SET NX</code>)
-          to <em>claim</em> it first, so two concurrent retries for the same key can&rsquo;t both slip through and do
+          to <em>claim</em>{" "}it first, so two concurrent retries for the same key can&rsquo;t both slip through and do
           the work twice.
         </p>
       </Section>
@@ -117,7 +117,7 @@ return result`}
 
       <Section title="Common mistakes">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Letting the server generate the key — the client must send the <em>same</em> key on a retry, so the client has to be the one that generates it.</li>
+          <li>Letting the server generate the key — the client must send the <em>same</em>{" "}key on a retry, so the client has to be the one that generates it.</li>
           <li>Storing the key only after the work succeeds, which leaves a race window where a concurrent retry can sneak through.</li>
           <li>Assuming at-least-once delivery is exactly-once — it never is; idempotency is how you cope with that.</li>
         </ul>

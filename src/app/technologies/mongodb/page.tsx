@@ -43,10 +43,10 @@ export default function MongoDBPage() {
 
       <Section id="overview" title="1. Overview">
         <p>
-          MongoDB stores flexible, JSON-like <strong>documents</strong> instead of rows in fixed tables — each
+          MongoDB stores flexible, JSON-like <strong>documents</strong>{" "}instead of rows in fixed tables — each
           document can have its own set of fields, no rigid schema required. It scales reads using{" "}
-          <strong>replica sets</strong> (groups of synced copies of the same data, for redundancy and read capacity),
-          and — its real differentiator — scales <em>writes</em> by <strong>sharding</strong>: splitting one
+          <strong>replica sets</strong>{" "}(groups of synced copies of the same data, for redundancy and read capacity),
+          and — its real differentiator — scales <em>writes</em>{" "}by <strong>sharding</strong>: splitting one
           collection of documents across many nodes, each holding its own slice of the data.
         </p>
       </Section>
@@ -54,16 +54,16 @@ export default function MongoDBPage() {
       <Section id="why" title="2. Why it exists">
         <p>
           When your data and write volume outgrow what one machine can hold, you have to split (partition) it
-          somehow. MongoDB builds that splitting in directly: a router process called <code>mongos</code> looks at
-          each document&rsquo;s <strong>shard key</strong> and sends it to the one shard responsible for that part of
+          somehow. MongoDB builds that splitting in directly: a router process called <code>mongos</code>{" "}looks at
+          each document&rsquo;s <strong>shard key</strong>{" "}and sends it to the one shard responsible for that part of
           the key range. As you add shards, the cluster&rsquo;s total write capacity grows with them.
         </p>
       </Section>
 
       <Section id="simulation" title="3. Interactive Simulation">
         <p>
-          Start at <strong>Beginner</strong> (a single node), add a cache at <strong>Intermediate</strong>, then jump
-          to <strong>Advanced</strong> to watch a <code>mongos</code> router spread load across three shards. Push the
+          Start at <strong>Beginner</strong>{" "}(a single node), add a cache at <strong>Intermediate</strong>, then jump
+          to <strong>Advanced</strong>{" "}to watch a <code>mongos</code>{" "}router spread load across three shards. Push the
           traffic up and notice that no single shard becomes the bottleneck.
         </p>
         <TechSimulator tech="mongodb" />
@@ -71,10 +71,10 @@ export default function MongoDBPage() {
         <h3 className="mt-6 text-base font-semibold text-slate-100">Internals: sharding &amp; the shard key</h3>
         <p>
           See how the shard key decides both where data lives and how queries get routed. Pick a key, insert
-          documents, and watch them spread evenly (a <strong>hashed</strong> key) or pile onto one overloaded shard (a{" "}
-          <strong>low-cardinality</strong> or <strong>monotonic</strong> key — one with too few distinct values, or
-          one that always increases, like a timestamp). Then compare a <strong>targeted query</strong> (goes straight
-          to the one shard that owns the data) against a <strong>scatter-gather query</strong> (has to ask every
+          documents, and watch them spread evenly (a <strong>hashed</strong>{" "}key) or pile onto one overloaded shard (a{" "}
+          <strong>low-cardinality</strong>{" "}or <strong>monotonic</strong>{" "}key — one with too few distinct values, or
+          one that always increases, like a timestamp). Then compare a <strong>targeted query</strong>{" "}(goes straight
+          to the one shard that owns the data) against a <strong>scatter-gather query</strong>{" "}(has to ask every
           shard because it doesn&rsquo;t include the shard key).
         </p>
         <MongoShardingViz />
@@ -84,7 +84,7 @@ export default function MongoDBPage() {
         <p>
           Replica sets scale reads and give you failover (a backup copy is ready to take over). Sharding scales
           writes and total storage. Picking a good <strong>shard key</strong> — one with many distinct values and
-          evenly spread access — is the whole game: a bad key creates a <strong>hot shard</strong> that takes most of
+          evenly spread access — is the whole game: a bad key creates a <strong>hot shard</strong>{" "}that takes most of
           the traffic, which is exactly the single-node bottleneck you were trying to avoid.
         </p>
       </Section>

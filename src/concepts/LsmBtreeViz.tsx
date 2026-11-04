@@ -177,7 +177,7 @@ export function LsmBtreeViz() {
       ) : null}
 
       <p className="mt-3 text-[12px] leading-snug text-slate-400">
-        <strong className="text-emerald-300">LSM-tree</strong> turns every write into a sequential append, so it absorbs
+        <strong className="text-emerald-300">LSM-tree</strong>{" "}turns every write into a sequential append, so it absorbs
         huge write throughput — used by <strong>Cassandra, RocksDB, LevelDB, ScyllaDB</strong>. <strong className="text-sky-300">B-tree</strong>{" "}
         keeps data in one sorted place, so point and range reads are cheap — used by <strong>PostgreSQL, MySQL/InnoDB, MongoDB (WiredTiger)</strong>.
       </p>

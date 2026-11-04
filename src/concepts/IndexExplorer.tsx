@@ -338,7 +338,7 @@ export function IndexExplorer({ db }: { db: DB }) {
               })}
             </div>
             <p className="mt-2 text-[10px] leading-snug text-slate-500">
-              Each leaf entry is <span className="font-mono">email → {t.ptrCol}</span>, kept sorted. A search walks root → leaf in ~log(n) steps, then follows the pointer into the {db === "postgres" ? "heap" : "collection"}. This is a <strong className="text-slate-400">B⁺-tree</strong>: separator keys only route in the root, <em>every</em> real entry lives in a leaf, and leaves are linked in order (which makes range scans fast). {db === "postgres" ? "Postgres names the access method btree, but implements it as a B⁺-tree (Lehman–Yao)." : "MongoDB's docs call this a “B-tree”, but the WiredTiger engine implements it as a B⁺-tree — internal pages hold only routing keys, values live in leaves."}
+              Each leaf entry is <span className="font-mono">email → {t.ptrCol}</span>, kept sorted. A search walks root → leaf in ~log(n) steps, then follows the pointer into the {db === "postgres" ? "heap" : "collection"}. This is a <strong className="text-slate-400">B⁺-tree</strong>: separator keys only route in the root, <em>every</em>{" "}real entry lives in a leaf, and leaves are linked in order (which makes range scans fast). {db === "postgres" ? "Postgres names the access method btree, but implements it as a B⁺-tree (Lehman–Yao)." : "MongoDB's docs call this a “B-tree”, but the WiredTiger engine implements it as a B⁺-tree — internal pages hold only routing keys, values live in leaves."}
             </p>
           </div>
         </div>

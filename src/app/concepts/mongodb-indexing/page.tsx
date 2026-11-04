@@ -40,16 +40,16 @@ export default function MongoIndexingPage() {
 
       <Section title="Definition">
         <p>
-          A MongoDB collection stores <strong>BSON documents</strong> (MongoDB&rsquo;s binary JSON-like format), each
-          one addressed internally by a <strong>RecordId</strong>. An <strong>index</strong> is a separate, sorted
+          A MongoDB collection stores <strong>BSON documents</strong>{" "}(MongoDB&rsquo;s binary JSON-like format), each
+          one addressed internally by a <strong>RecordId</strong>. An <strong>index</strong>{" "}is a separate, sorted
           structure that maps a field&rsquo;s values to a RecordId — so MongoDB can jump straight to a document
           instead of checking every one. Below are ten real user documents on the left and an index on{" "}
-          <code>email</code> on the right.
+          <code>email</code>{" "}on the right.
         </p>
         <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[14px]">
-          <strong className="text-amber-300">Worth getting right:</strong> MongoDB&rsquo;s own docs call its indexes
+          <strong className="text-amber-300">Worth getting right:</strong>{" "}MongoDB&rsquo;s own docs call its indexes
           &ldquo;B-tree,&rdquo; which is why people often say <em>&ldquo;MongoDB uses a B-tree, Postgres uses a
-          B+ tree.&rdquo;</em> That split is a myth. MongoDB&rsquo;s storage engine, <strong>WiredTiger</strong>,
+          B+ tree.&rdquo;</em>{" "}That split is a myth. MongoDB&rsquo;s storage engine, <strong>WiredTiger</strong>,
           describes its own structure as one where &ldquo;internal pages only store keys and references&hellip; leaf
           pages store keys and values&rdquo; — that&rsquo;s the definition of a <strong>B⁺-tree</strong>. Both
           MongoDB and PostgreSQL use B⁺-trees under the hood; only the name they use for it differs.
@@ -69,11 +69,11 @@ export default function MongoIndexingPage() {
 
       <Section title="Try it — IXSCAN vs COLLSCAN">
         <p>
-          Query on <strong>email</strong> (indexed): MongoDB walks down the B⁺-tree, finds the key, and follows its
-          RecordId pointer straight to one document — an <strong>IXSCAN</strong> feeding a <strong>FETCH</strong>.
-          Now query on <strong>city</strong> (no index): with nothing to search by, MongoDB falls back to a{" "}
+          Query on <strong>email</strong>{" "}(indexed): MongoDB walks down the B⁺-tree, finds the key, and follows its
+          RecordId pointer straight to one document — an <strong>IXSCAN</strong>{" "}feeding a <strong>FETCH</strong>.
+          Now query on <strong>city</strong>{" "}(no index): with nothing to search by, MongoDB falls back to a{" "}
           <strong>COLLSCAN</strong>, reading every document one by one. We deliberately don&rsquo;t query{" "}
-          <code>_id</code> here — it&rsquo;s always indexed automatically; the interesting comparison is a normal
+          <code>_id</code>{" "}here — it&rsquo;s always indexed automatically; the interesting comparison is a normal
           field with an index versus one without.
         </p>
         <MongoIndexViz />
@@ -81,9 +81,9 @@ export default function MongoIndexingPage() {
 
       <Section title="What a write does to the index">
         <p>
-          Reads are only half the story. Every <code>insertOne</code> also has to slot the new value into the
+          Reads are only half the story. Every <code>insertOne</code>{" "}also has to slot the new value into the
           B⁺-tree in the right sorted position. The write walks down to the correct leaf page and drops the key in.
-          If that leaf is already full, it <strong>splits</strong> into two, and a copy of the middle key moves up to
+          If that leaf is already full, it <strong>splits</strong>{" "}into two, and a copy of the middle key moves up to
           the parent — if the parent is also full, that split can cascade all the way to the root, making the tree
           one level taller. WiredTiger uses the same B⁺-tree split logic PostgreSQL does.
         </p>
@@ -124,9 +124,9 @@ db.users.find({ city: "Tokyo" }).explain("executionStats")
 
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Faster reads, but every <strong>insert / update</strong> has to maintain each index, and indexes consume RAM (your working set should fit in memory for them to stay fast).</li>
+          <li>Faster reads, but every <strong>insert / update</strong>{" "}has to maintain each index, and indexes consume RAM (your working set should fit in memory for them to stay fast).</li>
           <li>Compound indexes (indexes on more than one field) follow the <strong>ESR rule</strong> — Equality fields first, then Sort, then Range — for the best field order.</li>
-          <li>Array fields automatically become <strong>multikey</strong> indexes; a poorly-chosen index still leaves a COLLSCAN in the plan.</li>
+          <li>Array fields automatically become <strong>multikey</strong>{" "}indexes; a poorly-chosen index still leaves a COLLSCAN in the plan.</li>
         </ul>
       </Section>
 
@@ -134,7 +134,7 @@ db.users.find({ city: "Tokyo" }).explain("executionStats")
         <ul className="list-disc space-y-1 pl-5">
           <li>Adding an index to every field &ldquo;just in case&rdquo; — each one slows down writes and uses memory, whether or not it&rsquo;s ever used by a query.</li>
           <li>Getting the field order wrong on a compound index (not following the ESR rule), so queries that should use it fall back to a COLLSCAN instead.</li>
-          <li>Never running <code>explain(&quot;executionStats&quot;)</code> on a slow query — it&rsquo;s the only way to see whether MongoDB actually used the index you expected.</li>
+          <li>Never running <code>explain(&quot;executionStats&quot;)</code>{" "}on a slow query — it&rsquo;s the only way to see whether MongoDB actually used the index you expected.</li>
         </ul>
       </Section>
 

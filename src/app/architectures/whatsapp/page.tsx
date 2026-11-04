@@ -42,7 +42,7 @@ export default function WhatsAppPage() {
           Deliver messages between users in near real time and reliably, even if the recipient is offline right now.
           The sender should see &ldquo;sent&rdquo; immediately, while the actual delivery happens a moment later in
           the background. That gap — confirm fast, deliver separately — is the classic reason to put a{" "}
-          <strong>broker</strong> (a middleman service that temporarily holds messages) between sending and
+          <strong>broker</strong>{" "}(a middleman service that temporarily holds messages) between sending and
           delivering.
         </p>
       </Section>
@@ -76,13 +76,13 @@ export default function WhatsAppPage() {
 
       <Section title="5. Request Flow">
         <p>
-          <strong>Send:</strong> your client talks to a <strong>gateway</strong> (the server holding your live
+          <strong>Send:</strong>{" "}your client talks to a <strong>gateway</strong>{" "}(the server holding your live
           connection), which forwards the message to the chat service. The chat service saves the message, publishes
-          a <em>MessageSent</em> event to the broker, and confirms back to the sender right away — before anyone has
+          a <em>MessageSent</em>{" "}event to the broker, and confirms back to the sender right away — before anyone has
           actually received it yet.
         </p>
         <p>
-          <strong>Deliver:</strong> a delivery worker picks up that event and either pushes it straight to the
+          <strong>Deliver:</strong>{" "}a delivery worker picks up that event and either pushes it straight to the
           recipient&rsquo;s device (if they&rsquo;re online) or stores it to send the moment they reconnect, then
           records a delivery receipt.
         </p>
@@ -120,10 +120,10 @@ export default function WhatsAppPage() {
       <Section title="9. Technology Choices">
         <p>
           WebSocket gateways, a chat service, and{" "}
-          <Link href="/technologies/kafka" className="text-sky-400 hover:text-sky-300">Kafka</Link> (or{" "}
+          <Link href="/technologies/kafka" className="text-sky-400 hover:text-sky-300">Kafka</Link>{" "}(or{" "}
           <Link href="/technologies/rabbitmq" className="text-sky-400 hover:text-sky-300">RabbitMQ</Link>) as the
           message broker, with a high-write store like Cassandra or{" "}
-          <Link href="/technologies/mongodb" className="text-sky-400 hover:text-sky-300">MongoDB</Link> to hold
+          <Link href="/technologies/mongodb" className="text-sky-400 hover:text-sky-300">MongoDB</Link>{" "}to hold
           message history.
         </p>
       </Section>
@@ -148,8 +148,8 @@ consumer.on("MessageSent", (m) => {
 
       <Section title="11. Alternatives & Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li><strong>Push</strong> (deliver to every member&rsquo;s device the moment a message is sent) vs <strong>pull</strong> (just record that a new message exists, and let each device fetch it when it opens the chat) for large groups — most real chat apps use a hybrid of the two.</li>
-          <li><strong>At-least-once delivery + deduping by message id</strong> (practical) vs the goal of true &ldquo;exactly-once&rdquo; delivery, which is effectively impossible to guarantee over an unreliable network.</li>
+          <li><strong>Push</strong>{" "}(deliver to every member&rsquo;s device the moment a message is sent) vs <strong>pull</strong>{" "}(just record that a new message exists, and let each device fetch it when it opens the chat) for large groups — most real chat apps use a hybrid of the two.</li>
+          <li><strong>At-least-once delivery + deduping by message id</strong>{" "}(practical) vs the goal of true &ldquo;exactly-once&rdquo; delivery, which is effectively impossible to guarantee over an unreliable network.</li>
           <li>End-to-end encryption means the server can no longer read message contents — fan-out to multiple devices and read receipts shift from server logic to client logic.</li>
         </ul>
       </Section>

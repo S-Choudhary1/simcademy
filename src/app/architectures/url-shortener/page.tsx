@@ -64,10 +64,10 @@ export default function UrlShortenerPage() {
 
       <Section title="4. Interactive Architecture">
         <p>
-          A <strong>load balancer</strong> (a server that spreads incoming traffic across several app servers) sends
-          each redirect to one of several identical, <strong>stateless</strong> app servers — stateless just means
+          A <strong>load balancer</strong>{" "}(a server that spreads incoming traffic across several app servers) sends
+          each redirect to one of several identical, <strong>stateless</strong>{" "}app servers — stateless just means
           any one of them can handle any request, since none of them remember anything between requests. Those app
-          servers check a <strong>cache</strong> (a fast, in-memory lookup) before ever touching the database. Because
+          servers check a <strong>cache</strong>{" "}(a fast, in-memory lookup) before ever touching the database. Because
           the same handful of links get clicked over and over, almost every lookup is a cache hit. Try raising the
           traffic below and watch the database stay calm, or select the cache and drag its <strong>Hit ratio</strong>{" "}
           down to see what happens as fewer and fewer lookups are served from memory.
@@ -86,7 +86,7 @@ export default function UrlShortenerPage() {
 
       <Section title="6. Component Deep Dive">
         <ul className="list-disc space-y-1 pl-5">
-          <li><strong>Key generation</strong> — turn a number into a short code using <strong>base62</strong> (a counting system that uses 62 characters, 0-9/a-z/A-Z, instead of just 0-9). Take an auto-incrementing id (1, 2, 3, ...) or a number drawn from a pre-generated pool, and base62-encode it into something like &ldquo;aX9k&rdquo;. Since every id is unique, the resulting code is unique too — no need to check &ldquo;does this code already exist?&rdquo; before saving it.</li>
+          <li><strong>Key generation</strong> — turn a number into a short code using <strong>base62</strong>{" "}(a counting system that uses 62 characters, 0-9/a-z/A-Z, instead of just 0-9). Take an auto-incrementing id (1, 2, 3, ...) or a number drawn from a pre-generated pool, and base62-encode it into something like &ldquo;aX9k&rdquo;. Since every id is unique, the resulting code is unique too — no need to check &ldquo;does this code already exist?&rdquo; before saving it.</li>
           <li><strong>Cache</strong> — holds the recently-used links in memory so most redirects never touch the database. The whole design depends on most clicks hitting a small, popular set of links.</li>
           <li><strong>Database</strong> — just a simple code→URL lookup table. Because a mapping never changes once created, caching it forever is completely safe — there&rsquo;s no stale-data risk to worry about.</li>
         </ul>
@@ -96,25 +96,25 @@ export default function UrlShortenerPage() {
         <p>
           App servers are stateless, so scaling reads is as simple as adding more of them behind the load balancer.
           The cache (plus read replicas — extra copies of the database used only for reading) absorbs most of the
-          traffic. Because mappings never change, you can cache them with a long <strong>TTL</strong> (&ldquo;time to
+          traffic. Because mappings never change, you can cache them with a long <strong>TTL</strong>{" "}(&ldquo;time to
           live&rdquo; — how long a cached entry is kept before it expires), or even push the most popular links out to
-          a <strong>CDN</strong> (servers placed close to users around the world) for the fastest possible redirect.
+          a <strong>CDN</strong>{" "}(servers placed close to users around the world) for the fastest possible redirect.
         </p>
       </Section>
 
       <Section title="8. Failure Handling">
         <p>
-          Select the cache and click <strong>Kill</strong> in the simulation: redirects don&rsquo;t fail over to the
-          database — they&rsquo;re rejected outright (watch <strong>Errors</strong> climb while the database stays at
+          Select the cache and click <strong>Kill</strong>{" "}in the simulation: redirects don&rsquo;t fail over to the
+          database — they&rsquo;re rejected outright (watch <strong>Errors</strong>{" "}climb while the database stays at
           0% busy), because this simulator models a dead dependency as a hard failure, not a smart client with a
           built-in fallback. In a real cache-aside app, failing open to the database on a cache outage is logic{" "}
-          <em>you</em> have to write yourself — without it, a dead cache becomes a full outage even though the
+          <em>you</em>{" "}have to write yourself — without it, a dead cache becomes a full outage even though the
           database behind it is perfectly healthy.
         </p>
         <p>
           The scenario people usually mean by &ldquo;cache stampede&rdquo; is different: not a dead cache, but an{" "}
-          <em>empty</em> one (cold start, or a mass-eviction) that still works, just slower, because everything
-          misses at once. Drag <strong>Hit ratio</strong> toward 0% instead of killing the node to see that: the
+          <em>empty</em>{" "}one (cold start, or a mass-eviction) that still works, just slower, because everything
+          misses at once. Drag <strong>Hit ratio</strong>{" "}toward 0% instead of killing the node to see that: the
           database&rsquo;s utilisation and latency climb together as more lookups reach it for real. Mitigate it with
           database read replicas, request coalescing (merging duplicate in-flight lookups for the same code into a
           single database call), and warming the cache with the most popular links ahead of time.
@@ -123,10 +123,10 @@ export default function UrlShortenerPage() {
 
       <Section title="9. Technology Choices">
         <p>
-          <Link href="/technologies/nginx" className="text-sky-400 hover:text-sky-300">Nginx</Link> or another L7
+          <Link href="/technologies/nginx" className="text-sky-400 hover:text-sky-300">Nginx</Link>{" "}or another L7
           load balancer up front, stateless app servers,{" "}
-          <Link href="/technologies/redis" className="text-sky-400 hover:text-sky-300">Redis</Link> for the cache, and{" "}
-          <Link href="/technologies/postgresql" className="text-sky-400 hover:text-sky-300">PostgreSQL</Link> (or any
+          <Link href="/technologies/redis" className="text-sky-400 hover:text-sky-300">Redis</Link>{" "}for the cache, and{" "}
+          <Link href="/technologies/postgresql" className="text-sky-400 hover:text-sky-300">PostgreSQL</Link>{" "}(or any
           key-value store) for the mappings.
         </p>
       </Section>
@@ -153,8 +153,8 @@ return redirect(301, url)`}
 
       <Section title="11. Alternatives & Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li><strong>Hash-of-URL</strong> codes (hash the long URL itself, so the same URL always maps to the same short code, avoiding duplicates) vs <strong>counter-based</strong> codes (shorter, but need a central id generator).</li>
-          <li><strong>301</strong> redirects get cached by browsers and CDNs, so repeat clicks may never reach your server — fast, but you lose click analytics. <strong>302</strong> redirects aren&rsquo;t cached, so every click hits your server — slower, but you keep full analytics.</li>
+          <li><strong>Hash-of-URL</strong>{" "}codes (hash the long URL itself, so the same URL always maps to the same short code, avoiding duplicates) vs <strong>counter-based</strong>{" "}codes (shorter, but need a central id generator).</li>
+          <li><strong>301</strong>{" "}redirects get cached by browsers and CDNs, so repeat clicks may never reach your server — fast, but you lose click analytics. <strong>302</strong>{" "}redirects aren&rsquo;t cached, so every click hits your server — slower, but you keep full analytics.</li>
           <li>A pure key-value store (DynamoDB, Redis) instead of a relational database, since you never query by anything other than the code.</li>
         </ul>
       </Section>

@@ -32,8 +32,8 @@ export default function SqlVsNoSqlPage() {
       </Lede>
 
       <Callout>
-        <strong>SQL</strong> stores normalized rows with a schema enforced on write, and lets you join and transact
-        across them with strong guarantees. <strong>NoSQL</strong> is an umbrella for stores that relax one or more of
+        <strong>SQL</strong>{" "}stores normalized rows with a schema enforced on write, and lets you join and transact
+        across them with strong guarantees. <strong>NoSQL</strong>{" "}is an umbrella for stores that relax one or more of
         those — a flexible schema, no joins, eventual consistency — usually in exchange for horizontal scale or a data
         model that fits the problem better. Neither is &ldquo;faster.&rdquo; They&rsquo;re shaped for different access
         patterns.
@@ -48,7 +48,7 @@ export default function SqlVsNoSqlPage() {
       </P>
       <P>
         NoSQL flips that around. A document store like <A href="/technologies/mongodb">MongoDB</A> keeps everything
-        related to one thing — an order <em>together with</em> its line items — in a single document, so a read is
+        related to one thing — an order <em>together with</em>{" "}its line items — in a single document, so a read is
         one lookup with no join needed. A wide-column store like <A href="/technologies/cassandra">Cassandra</A> goes
         further: you design a separate table for each query you plan to run, then <A href="/concepts/sharding">shard</A>{" "}
         (split) that table across many machines. The price is duplicated data and{" "}
@@ -74,7 +74,7 @@ export default function SqlVsNoSqlPage() {
       <P>
         &ldquo;SQL can&rsquo;t scale&rdquo; is wrong. Postgres and MySQL scale reads with{" "}
         <A href="/concepts/replication">replicas</A> and scale writes with partitioning, and plenty of the largest
-        systems on earth run on them. What <em>is</em> true: NoSQL stores were designed from day one for horizontal
+        systems on earth run on them. What <em>is</em>{" "}true: NoSQL stores were designed from day one for horizontal
         sharding, with no single server acting as the required write leader, so that scale-out path is easier and
         more automatic out of the box. If you will genuinely outgrow what one primary server can write, that head
         start matters. Most applications never actually get there.
@@ -107,7 +107,7 @@ export default function SqlVsNoSqlPage() {
         of the system has an access pattern or scale requirement that SQL genuinely fights you on — and often, run both.
       </P>
 
-      <PullQuote>&ldquo;SQL vs NoSQL&rdquo; is rarely the real question. &ldquo;Which store for <em>this</em> workload&rdquo; is.</PullQuote>
+      <PullQuote>&ldquo;SQL vs NoSQL&rdquo; is rarely the real question. &ldquo;Which store for <em>this</em>{" "}workload&rdquo; is.</PullQuote>
 
       <Related
         links={[

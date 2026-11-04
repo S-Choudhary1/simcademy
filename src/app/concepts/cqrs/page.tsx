@@ -39,14 +39,14 @@ export default function CqrsPage() {
 
       <Section title="Definition">
         <p>
-          CQRS means using two separate models instead of one: a <strong>write model</strong> that handles{" "}
-          <strong>commands</strong> (anything that changes data) and a <strong>read model</strong> that handles{" "}
-          <strong>queries</strong> (anything that just reads data).
+          CQRS means using two separate models instead of one: a <strong>write model</strong>{" "}that handles{" "}
+          <strong>commands</strong>{" "}(anything that changes data) and a <strong>read model</strong>{" "}that handles{" "}
+          <strong>queries</strong>{" "}(anything that just reads data).
         </p>
         <p>
           In its simplest form, both models can even share the same database — CQRS by itself just means
           &ldquo;stop reusing one model for both jobs.&rdquo; Most real-world CQRS systems go further: the write
-          model emits events, and a background process called a <strong>projection</strong> listens for those events
+          model emits events, and a background process called a <strong>projection</strong>{" "}listens for those events
           and builds a read-optimised copy of the data, often reshaped and flattened purely for fast queries. That
           version is more powerful, but it adds a short delay between writing and the read model catching up.
         </p>
@@ -83,17 +83,17 @@ export default function CqrsPage() {
       <Section title="Where it&rsquo;s used">
         <p>
           Dashboards, feeds, and any system where reads vastly outnumber writes or need a very different shape than
-          the write side. It&rsquo;s often paired with <strong>event sourcing</strong> (where the event log itself is
+          the write side. It&rsquo;s often paired with <strong>event sourcing</strong>{" "}(where the event log itself is
           the source of truth) and delivered reliably with the{" "}
-          <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">outbox</Link> pattern.
+          <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">outbox</Link>{" "}pattern.
         </p>
       </Section>
 
       <Section title="How to implement">
         <ul className="list-disc space-y-1 pl-5">
           <li>Split your code into command handlers (validate the request, then change the write model) and query handlers (just read from the read model) — they don&rsquo;t need to share logic.</li>
-          <li>When the write model changes, emit a domain event describing what happened. A <strong>projection</strong> listens for that event and updates the read store into whatever shape the queries need.</li>
-          <li>Publish those events reliably with the <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">outbox</Link> pattern, and keep the event history so you can rebuild the read model from scratch if a projection ever has a bug.</li>
+          <li>When the write model changes, emit a domain event describing what happened. A <strong>projection</strong>{" "}listens for that event and updates the read store into whatever shape the queries need.</li>
+          <li>Publish those events reliably with the <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">outbox</Link>{" "}pattern, and keep the event history so you can rebuild the read model from scratch if a projection ever has a bug.</li>
         </ul>
       </Section>
 

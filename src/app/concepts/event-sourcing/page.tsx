@@ -39,11 +39,11 @@ export default function EventSourcingPage() {
 
       <Section title="Definition">
         <p>
-          Instead of storing just the current value (like a mutable <code>balance</code> column you overwrite on every
+          Instead of storing just the current value (like a mutable <code>balance</code>{" "}column you overwrite on every
           update), you store every change as it happens, in order, as an <strong>event</strong> — for example{" "}
           <em>Deposited $100</em>, then <em>Withdrew $30</em>. This append-only list of events is the{" "}
           <strong>source of truth</strong>. The current state isn&rsquo;t stored anywhere directly — it&rsquo;s
-          calculated by replaying every event in order, a step called a <strong>fold</strong> (just a term for
+          calculated by replaying every event in order, a step called a <strong>fold</strong>{" "}(just a term for
           &ldquo;combine these one at a time into a running result,&rdquo; the same idea as a running total).
         </p>
       </Section>
@@ -60,7 +60,7 @@ export default function EventSourcingPage() {
 
       <Section title="Try it">
         <p>
-          Append a few deposits and withdrawals to the log, then drag the <strong>time-travel</strong> scrubber. The
+          Append a few deposits and withdrawals to the log, then drag the <strong>time-travel</strong>{" "}scrubber. The
           balance you see isn&rsquo;t stored anywhere — it&rsquo;s recomputed on the spot by replaying every event up
           to that point in time.
         </p>
@@ -81,7 +81,7 @@ export default function EventSourcingPage() {
           happened, and when&rdquo; matters as much as the final number. It pairs naturally with{" "}
           <Link href="/concepts/cqrs" className="text-sky-400 hover:text-sky-300">CQRS</Link> — the events feed{" "}
           projections that become read models — and ships those events reliably via the{" "}
-          <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">outbox</Link> pattern.
+          <Link href="/concepts/outbox" className="text-sky-400 hover:text-sky-300">outbox</Link>{" "}pattern.
         </p>
       </Section>
 
@@ -110,7 +110,7 @@ const state = apply(loadSnapshot(id), eventsSince(snapshot.version))`}
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
           <li>Full history, an audit trail, time travel, and rebuildable read models — at the cost of a genuinely different way of modelling your data.</li>
-          <li>Querying needs a projection; you can&rsquo;t just <code>SELECT</code> the current state straight out of the event log.</li>
+          <li>Querying needs a projection; you can&rsquo;t just <code>SELECT</code>{" "}the current state straight out of the event log.</li>
           <li>Replaying a long log gets slow without snapshots, and events need a versioning plan for when your schema changes.</li>
         </ul>
       </Section>

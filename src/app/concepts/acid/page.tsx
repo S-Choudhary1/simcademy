@@ -41,7 +41,7 @@ export default function AcidPage() {
 
       <Section title="Definition">
         <p>
-          A <strong>transaction</strong> bundles several database operations so they succeed or fail together, as one
+          A <strong>transaction</strong>{" "}bundles several database operations so they succeed or fail together, as one
           unit. ACID is four guarantees about that unit:
         </p>
         <ul className="list-disc space-y-1 pl-5">
@@ -80,7 +80,7 @@ export default function AcidPage() {
         <p>
           Relational databases (<Link href="/technologies/postgresql" className="text-sky-400 hover:text-sky-300">PostgreSQL</Link>,
           MySQL, SQL Server) provide full ACID. Document stores like{" "}
-          <Link href="/technologies/mongodb" className="text-sky-400 hover:text-sky-300">MongoDB</Link> give ACID within
+          <Link href="/technologies/mongodb" className="text-sky-400 hover:text-sky-300">MongoDB</Link>{" "}give ACID within
           a single document and, more recently, across multi-document transactions too.
         </p>
       </Section>
@@ -102,16 +102,16 @@ COMMIT;   -- or ROLLBACK on any error`}
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
           <li>Correctness vs concurrency: locking and strict isolation protect correctness but cap how many transactions can run at once, and stricter isolation means more aborts and retries.</li>
-          <li>Scope is one database (or cluster) — a transaction can&rsquo;t safely span separate services (use a <Link href="/concepts/saga" className="text-sky-400 hover:text-sky-300">saga</Link> for that).</li>
+          <li>Scope is one database (or cluster) — a transaction can&rsquo;t safely span separate services (use a <Link href="/concepts/saga" className="text-sky-400 hover:text-sky-300">saga</Link>{" "}for that).</li>
           <li>Durability requires an fsync (a guaranteed disk write) on commit, which costs some latency.</li>
         </ul>
       </Section>
 
       <Section title="Common mistakes">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Assuming an eventually-consistent store (common in NoSQL) gives you ACID guarantees — it typically gives you <Link href="/concepts/base" className="text-sky-400 hover:text-sky-300">BASE</Link> instead.</li>
+          <li>Assuming an eventually-consistent store (common in NoSQL) gives you ACID guarantees — it typically gives you <Link href="/concepts/base" className="text-sky-400 hover:text-sky-300">BASE</Link>{" "}instead.</li>
           <li>Ignoring isolation levels and then hitting anomalies (dirty reads, phantom reads) under concurrency.</li>
-          <li>Treating an operation that spans multiple services as one transaction — use a <Link href="/concepts/saga" className="text-sky-400 hover:text-sky-300">saga</Link> instead.</li>
+          <li>Treating an operation that spans multiple services as one transaction — use a <Link href="/concepts/saga" className="text-sky-400 hover:text-sky-300">saga</Link>{" "}instead.</li>
         </ul>
       </Section>
 

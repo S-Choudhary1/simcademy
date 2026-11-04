@@ -42,16 +42,16 @@ export default function PostgresIndexingPage() {
         <p>
           A PostgreSQL table is stored as a <strong>heap</strong>: rows sit wherever they were inserted, addressed by
           a physical location called a <code>ctid</code>, like <code>(0,3)</code> — page 0, slot 3. An{" "}
-          <strong>index</strong> is a separate, sorted structure that maps a column&rsquo;s values back to a{" "}
+          <strong>index</strong>{" "}is a separate, sorted structure that maps a column&rsquo;s values back to a{" "}
           <code>ctid</code>, so Postgres can jump straight to a row instead of checking every one. Below, the same
-          ten users appear both ways — the heap on the left, an index on <code>email</code> on the right.
+          ten users appear both ways — the heap on the left, an index on <code>email</code>{" "}on the right.
         </p>
         <p>
           Postgres names its default access method <code>btree</code>, but it&rsquo;s really a{" "}
-          <strong>B⁺-tree</strong> (specifically the Lehman&ndash;Yao design): the upper levels hold only separator
+          <strong>B⁺-tree</strong>{" "}(specifically the Lehman&ndash;Yao design): the upper levels hold only separator
           keys to guide the search, while every real entry (<code>value → ctid</code>) lives in a{" "}
-          <strong>leaf</strong> page. Leaf pages are linked to their neighbors, which is what makes range scans and{" "}
-          <code>ORDER BY</code> fast.
+          <strong>leaf</strong>{" "}page. Leaf pages are linked to their neighbors, which is what makes range scans and{" "}
+          <code>ORDER BY</code>{" "}fast.
         </p>
         <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">{`CREATE INDEX idx_users_email ON users (email);   -- email is now indexed
 -- city is NOT indexed`}</pre>
@@ -68,10 +68,10 @@ export default function PostgresIndexingPage() {
 
       <Section title="Try it — index scan vs sequential scan">
         <p>
-          Search on <strong>email</strong> (indexed) and watch the query descend the B⁺-tree, land on a leaf, and
-          follow the <code>ctid</code> pointer to fetch exactly one row. Then switch to <strong>city</strong> (no
-          index): with nothing to seek, Postgres falls back to a <strong>Seq Scan</strong> and checks all ten rows.
-          Notice we never search by <code>id</code> here — that&rsquo;s the primary key and always indexed
+          Search on <strong>email</strong>{" "}(indexed) and watch the query descend the B⁺-tree, land on a leaf, and
+          follow the <code>ctid</code>{" "}pointer to fetch exactly one row. Then switch to <strong>city</strong>{" "}(no
+          index): with nothing to seek, Postgres falls back to a <strong>Seq Scan</strong>{" "}and checks all ten rows.
+          Notice we never search by <code>id</code>{" "}here — that&rsquo;s the primary key and always indexed
           automatically; the interesting comparison is a normal column with and without an index.
         </p>
         <PostgresIndexViz />
@@ -79,9 +79,9 @@ export default function PostgresIndexingPage() {
 
       <Section title="What a write does to the index">
         <p>
-          Reads are only half the story. Every <code>INSERT</code> also has to slot the new value into the B⁺-tree
+          Reads are only half the story. Every <code>INSERT</code>{" "}also has to slot the new value into the B⁺-tree
           in the right sorted position. The write walks down to the correct leaf and drops the key in. If that leaf
-          is already full, it <strong>splits</strong> into two, and a copy of the middle key moves up to the parent —
+          is already full, it <strong>splits</strong>{" "}into two, and a copy of the middle key moves up to the parent —
           if the parent is also full, that split can cascade all the way to the root, making the tree one level
           taller.
         </p>
@@ -102,8 +102,8 @@ export default function PostgresIndexingPage() {
 EXPLAIN ANALYZE SELECT * FROM users WHERE city = 'Tokyo';
 --  Seq Scan on users  (rows=3)                            ← reads every row`}</pre>
         <p>
-          The plan node tells you which path actually ran. <strong>Index Scan</strong> means the B⁺-tree index was
-          used; <strong>Seq Scan</strong> means Postgres read the whole heap. On ten rows the difference is
+          The plan node tells you which path actually ran. <strong>Index Scan</strong>{" "}means the B⁺-tree index was
+          used; <strong>Seq Scan</strong>{" "}means Postgres read the whole heap. On ten rows the difference is
           invisible; on ten million it&rsquo;s the difference between a millisecond and a full-table sweep.
         </p>
       </Section>
@@ -119,7 +119,7 @@ EXPLAIN ANALYZE SELECT * FROM users WHERE city = 'Tokyo';
 
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Reads get much faster, but every <strong>INSERT / UPDATE / DELETE</strong> must also keep each index in sync.</li>
+          <li>Reads get much faster, but every <strong>INSERT / UPDATE / DELETE</strong>{" "}must also keep each index in sync.</li>
           <li>Indexes cost storage and memory — the more you add, the more write overhead you pay on every change.</li>
           <li>For a low-selectivity filter (a column with only a few distinct values, like a boolean flag), a Seq Scan can actually be cheaper — the planner decides based on estimated cost, not just whether an index exists.</li>
         </ul>
@@ -129,7 +129,7 @@ EXPLAIN ANALYZE SELECT * FROM users WHERE city = 'Tokyo';
         <ul className="list-disc space-y-1 pl-5">
           <li>Adding an index to every column &ldquo;just in case&rdquo; — each one slows down every write, whether or not a query ever uses it.</li>
           <li>Assuming a column with an index will always use it — on a low-selectivity column, Postgres may rightly prefer a Seq Scan.</li>
-          <li>Never running <code>EXPLAIN ANALYZE</code> on a slow query — it&rsquo;s the only reliable way to see which plan Postgres actually chose.</li>
+          <li>Never running <code>EXPLAIN ANALYZE</code>{" "}on a slow query — it&rsquo;s the only reliable way to see which plan Postgres actually chose.</li>
         </ul>
       </Section>
 

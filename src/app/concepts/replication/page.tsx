@@ -42,7 +42,7 @@ export default function ReplicationPage() {
 
       <Section title="Definition">
         <p>
-          In the most common setup — <strong>leader-follower</strong> (also called primary-replica) replication —
+          In the most common setup — <strong>leader-follower</strong>{" "}(also called primary-replica) replication —
           every write goes to one server, the <strong>leader</strong>. The leader streams those changes out to one
           or more other servers, called <strong>followers</strong>, which apply the same changes and can serve read
           requests. Because that streaming takes a moment, a follower is always a little behind the leader. That gap
@@ -63,7 +63,7 @@ export default function ReplicationPage() {
         <p>
           Add followers to raise read capacity — writes still only go to the leader. <strong>Read from a follower</strong>{" "}
           while it&rsquo;s still catching up and you&rsquo;ll get a stale value. Then <strong>fail the leader</strong>{" "}
-          and <strong>promote</strong> a follower to take over — if that follower was behind, whatever it missed is
+          and <strong>promote</strong>{" "}a follower to take over — if that follower was behind, whatever it missed is
           gone.
         </p>
         <ReplicationViz />
@@ -80,10 +80,10 @@ export default function ReplicationPage() {
       <Section title="Where it&rsquo;s used">
         <p>
           Read replicas in{" "}
-          <Link href="/technologies/postgresql" className="text-sky-400 hover:text-sky-300">PostgreSQL</Link> and{" "}
-          <Link href="/technologies/mongodb" className="text-sky-400 hover:text-sky-300">MongoDB</Link> replica sets,
+          <Link href="/technologies/postgresql" className="text-sky-400 hover:text-sky-300">PostgreSQL</Link>{" "}and{" "}
+          <Link href="/technologies/mongodb" className="text-sky-400 hover:text-sky-300">MongoDB</Link>{" "}replica sets,
           and the read side of nearly every large system. It underpins{" "}
-          <Link href="/concepts/base" className="text-sky-400 hover:text-sky-300">BASE</Link> and the availability
+          <Link href="/concepts/base" className="text-sky-400 hover:text-sky-300">BASE</Link>{" "}and the availability
           half of <Link href="/concepts/cap" className="text-sky-400 hover:text-sky-300">CAP</Link>.
         </p>
       </Section>
@@ -92,14 +92,14 @@ export default function ReplicationPage() {
         <ul className="list-disc space-y-1 pl-5">
           <li>Stand up followers that stream changes from the leader (PostgreSQL streaming replication and replication slots, or a MongoDB replica set).</li>
           <li>Route writes to the leader and reads to followers — either in your application code or through a proxy built for this (PgBouncer + Patroni for PostgreSQL, ProxySQL for MySQL).</li>
-          <li>Choose <strong>async</strong> replication (fast, but a crash can lose the most recent writes) or <strong>sync</strong> replication (no data loss, but every write waits for a follower to confirm, which adds latency).</li>
+          <li>Choose <strong>async</strong>{" "}replication (fast, but a crash can lose the most recent writes) or <strong>sync</strong>{" "}replication (no data loss, but every write waits for a follower to confirm, which adds latency).</li>
           <li>Automate failover with a tool that promotes the most-caught-up follower (Patroni, Orchestrator) instead of doing it by hand.</li>
         </ul>
       </Section>
 
       <Section title="Trade-offs">
         <ul className="list-disc space-y-1 pl-5">
-          <li>Scales <strong>reads</strong> and adds availability — but never scales <strong>writes</strong>, since there&rsquo;s still only one leader. Scaling writes needs sharding instead.</li>
+          <li>Scales <strong>reads</strong>{" "}and adds availability — but never scales <strong>writes</strong>, since there&rsquo;s still only one leader. Scaling writes needs sharding instead.</li>
           <li>Async replication risks stale reads and lost writes on failover; sync replication avoids data loss but slows every write down.</li>
           <li>Failover has a brief window of unavailability, and if done by hand without safeguards, it risks two servers both thinking they&rsquo;re the leader at once (split-brain).</li>
         </ul>

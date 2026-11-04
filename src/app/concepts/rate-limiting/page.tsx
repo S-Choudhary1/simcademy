@@ -44,8 +44,8 @@ export default function RateLimitingPage() {
         <p>
           A rate limiter caps how many requests a client — or the whole system — is allowed to make in a given
           stretch of time, and rejects anything over that, usually with an HTTP{" "}
-          <code>429 Too Many Requests</code> response. It protects a service from being overloaded, abused, or
-          running up a huge bill from a runaway client. The interesting part is <em>how</em> the limit gets enforced —
+          <code>429 Too Many Requests</code>{" "}response. It protects a service from being overloaded, abused, or
+          running up a huge bill from a runaway client. The interesting part is <em>how</em>{" "}the limit gets enforced —
           the algorithm decides whether a sudden burst of requests gets let through or cut off.
         </p>
       </Section>
@@ -131,7 +131,7 @@ if count > LIMIT: return 429 (Retry-After: ...)
 # read-modify-write is atomic on the Redis server.`}
         </pre>
         <ul className="list-disc space-y-1 pl-5">
-          <li>Key the counter by user, IP, or API key, and return <code>429</code> with a <code>Retry-After</code> header so clients know when to try again.</li>
+          <li>Key the counter by user, IP, or API key, and return <code>429</code>{" "}with a <code>Retry-After</code>{" "}header so clients know when to try again.</li>
           <li>Enforce it at the edge (gateway/CDN) so excess traffic never even reaches your own services.</li>
         </ul>
       </Section>
@@ -148,7 +148,7 @@ if count > LIMIT: return 429 (Retry-After: ...)
         <ul className="list-disc space-y-1 pl-5">
           <li>Using a fixed window and not realizing two back-to-back windows can let through double the intended burst.</li>
           <li>Limiting per-server instead of globally — distributed limiting needs shared state, usually Redis.</li>
-          <li>Skipping the <code>Retry-After</code> header, so rejected clients immediately retry instead of backing off.</li>
+          <li>Skipping the <code>Retry-After</code>{" "}header, so rejected clients immediately retry instead of backing off.</li>
         </ul>
       </Section>
 

@@ -28,15 +28,15 @@ export default function RestGrpcGraphqlPage() {
 
       <Lede>
         Every API answers the same question — how does one program ask another for something — but they optimize for
-        different pain. REST optimizes for <em>simplicity and reach</em>, gRPC for <em>speed and strictness</em> between
+        different pain. REST optimizes for <em>simplicity and reach</em>, gRPC for <em>speed and strictness</em>{" "}between
         services, and GraphQL for <em>the client&rsquo;s convenience</em>. Choosing well means knowing whose pain you&rsquo;re
         solving.
       </Lede>
 
       <Callout>
-        <strong>REST</strong> models everything as resources you <code>GET</code>/<code>POST</code> at URLs — universal,
-        cacheable, easy to debug. <strong>gRPC</strong> defines methods in a <code>.proto</code> contract and sends
-        compact binary over HTTP/2 — great for chatty internal service-to-service calls. <strong>GraphQL</strong> gives
+        <strong>REST</strong>{" "}models everything as resources you <code>GET</code>/<code>POST</code>{" "}at URLs — universal,
+        cacheable, easy to debug. <strong>gRPC</strong>{" "}defines methods in a <code>.proto</code>{" "}contract and sends
+        compact binary over HTTP/2 — great for chatty internal service-to-service calls. <strong>GraphQL</strong>{" "}gives
         the client one endpoint and a query language to fetch exactly the fields it needs in one round trip — great for
         rich frontends over many data sources.
       </Callout>
@@ -46,21 +46,21 @@ export default function RestGrpcGraphqlPage() {
         REST is resources over HTTP: <code>GET /users/42</code>, <code>POST /orders</code>. It rides everything HTTP
         already gives you — status codes, caching, <A href="/technologies/nginx">proxies</A>, and browser support — and
         anyone can debug it with <code>curl</code>. The weaknesses show at the edges: you often <strong>over-fetch</strong>{" "}
-        (the endpoint returns fields you don&rsquo;t need) or <strong>under-fetch</strong> (you call three endpoints to
+        (the endpoint returns fields you don&rsquo;t need) or <strong>under-fetch</strong>{" "}(you call three endpoints to
         render one screen), and there&rsquo;s no enforced schema unless you bolt on OpenAPI.
       </P>
 
       <H2 id="grpc">gRPC — contracts for services</H2>
       <P>
-        gRPC starts from a <strong>Protobuf contract</strong> — a <code>.proto</code> file where you write down every
+        gRPC starts from a <strong>Protobuf contract</strong> — a <code>.proto</code>{" "}file where you write down every
         message and method up front. From that one file, it generates matching client and server code in whatever
         languages your services use, so both sides agree on the exact shape of every call before you write a line of
         logic. Calls travel as compact binary (not readable text like JSON) over <strong>HTTP/2</strong>, which also
         lets multiple calls share one connection and stream data both ways. That combination makes gRPC excellent for{" "}
         internal service-to-service traffic, where low latency and a strict, enforced contract matter more than being
         human-readable. The cost: it&rsquo;s not natively browser-friendly (a browser needs a proxy like{" "}
-        <strong>grpc-web</strong> in front of it), the binary payloads can&rsquo;t be eyeballed with <code>curl</code>,
-        and the <code>.proto</code> contract is one more artifact every team has to keep in sync.
+        <strong>grpc-web</strong>{" "}in front of it), the binary payloads can&rsquo;t be eyeballed with <code>curl</code>,
+        and the <code>.proto</code>{" "}contract is one more artifact every team has to keep in sync.
       </P>
 
       <PullQuote>REST is a postcard anyone can read. gRPC is a sealed, typed envelope between machines that already agreed on the format.</PullQuote>
@@ -74,11 +74,11 @@ export default function RestGrpcGraphqlPage() {
         <strong>backend-for-frontend (BFF)</strong>.
       </P>
       <P>
-        The costs are real, though. Caching is harder, because almost every request is the same <code>POST</code> to
+        The costs are real, though. Caching is harder, because almost every request is the same <code>POST</code>{" "}to
         the same URL, so the simple &ldquo;cache by URL&rdquo; trick HTTP gives REST for free doesn&rsquo;t apply.
         Each field is served by a small function called a <strong>resolver</strong>; if you write a naive resolver
         for, say, &ldquo;each post&rsquo;s author,&rdquo; it can fire one database query to fetch the list of posts
-        and then one <em>more</em> query per post to fetch its author — the classic <strong>N+1 query</strong>{" "}
+        and then one <em>more</em>{" "}query per post to fetch its author — the classic <strong>N+1 query</strong>{" "}
         problem (1 list query + N follow-up queries). And because the client chooses the shape of the query, an
         overly deep or broad one can be very expensive to run — teams guard against that with query depth limits and
         batching tools (&ldquo;dataloaders&rdquo;) that collapse those N follow-up queries back into one.
@@ -108,8 +108,8 @@ export default function RestGrpcGraphqlPage() {
         ]}
       />
       <P>
-        In practice these coexist: a public <strong>REST</strong> API at the edge, <strong>gRPC</strong> between your
-        internal services, and a <strong>GraphQL</strong> gateway for the web and mobile apps. The question is never
+        In practice these coexist: a public <strong>REST</strong>{" "}API at the edge, <strong>gRPC</strong>{" "}between your
+        internal services, and a <strong>GraphQL</strong>{" "}gateway for the web and mobile apps. The question is never
         &ldquo;which one wins&rdquo; — it&rsquo;s &ldquo;which one for this boundary.&rdquo;
       </P>
 

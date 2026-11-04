@@ -42,7 +42,7 @@ export default function ConnectionPoolPage() {
           Opening a database connection takes real work — a network handshake, often encryption setup, then login —
           and every database caps how many connections it will accept at once. A <strong>connection pool</strong>{" "}
           avoids repeating that work: it keeps a fixed set of connections already open. A request{" "}
-          <strong>borrows</strong> one for the length of its query, then returns it to the pool. If every connection
+          <strong>borrows</strong>{" "}one for the length of its query, then returns it to the pool. If every connection
           is busy, the request waits its turn.
         </p>
       </Section>
@@ -51,7 +51,7 @@ export default function ConnectionPoolPage() {
         <p>
           Without a pool, a traffic spike opens thousands of new connections at once, and each one costs the database
           real memory and server-side resources — enough of them and the database falls over. A pool keeps the
-          number of simultaneous connections <strong>bounded</strong> to a safe limit, and reuses them instead of
+          number of simultaneous connections <strong>bounded</strong>{" "}to a safe limit, and reuses them instead of
           paying the setup cost on every single request.
         </p>
       </Section>
@@ -74,8 +74,8 @@ export default function ConnectionPoolPage() {
 
       <Section title="Where it&rsquo;s used">
         <p>
-          Every app talking to a database: an in-process pool (HikariCP, <code>node-postgres</code> Pool) and often a
-          separate pooler like <strong>PgBouncer</strong> in front of{" "}
+          Every app talking to a database: an in-process pool (HikariCP, <code>node-postgres</code>{" "}Pool) and often a
+          separate pooler like <strong>PgBouncer</strong>{" "}in front of{" "}
           <Link href="/technologies/postgresql" className="text-sky-400 hover:text-sky-300">PostgreSQL</Link>, which is
           essential for serverless where each function instance would otherwise open its own connections.
         </p>
@@ -97,7 +97,7 @@ console.log(result.rows);
         </pre>
         <p>
           A commonly cited starting point is pool size ≈ (CPU cores × 2) on the database server — but whatever number
-          you land on, always keep it below the database&rsquo;s own <code>max_connections</code> setting.
+          you land on, always keep it below the database&rsquo;s own <code>max_connections</code>{" "}setting.
         </p>
       </Section>
 

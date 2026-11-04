@@ -60,8 +60,8 @@ export default function NginxPage() {
 
       <Section id="simulation" title="3. Interactive Simulation">
         <p>
-          <strong>Beginner</strong> proxies to a single app server. <strong>Intermediate</strong> load-balances across
-          three. <strong>Advanced</strong> is a full edge setup: Nginx → app pool → cache → database. Raise the
+          <strong>Beginner</strong>{" "}proxies to a single app server. <strong>Intermediate</strong>{" "}load-balances across
+          three. <strong>Advanced</strong>{" "}is a full edge setup: Nginx → app pool → cache → database. Raise the
           traffic and watch it spread evenly across the pool.
         </p>
         <TechSimulator tech="nginx" />
@@ -89,8 +89,8 @@ export default function NginxPage() {
           In production, Nginx health-checks its upstreams and stops routing to one that&rsquo;s down — exactly what
           the proxy-cache demo above does when you take an upstream down. The main simulator below is simpler,
           though: its load balancer always round-robins across every server it knows about, healthy or not, so{" "}
-          <strong>Kill</strong> an app server there and that server&rsquo;s share of traffic doesn&rsquo;t get
-          rerouted to its peers — it just errors out (watch <strong>Errors</strong> climb by roughly one divided by
+          <strong>Kill</strong>{" "}an app server there and that server&rsquo;s share of traffic doesn&rsquo;t get
+          rerouted to its peers — it just errors out (watch <strong>Errors</strong>{" "}climb by roughly one divided by
           the number of app servers). Real Nginx would skip the dead server entirely, which is the behavior the
           cache demo above illustrates instead.
         </p>

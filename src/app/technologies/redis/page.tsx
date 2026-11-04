@@ -85,7 +85,7 @@ export default function RedisPage() {
           Redis keeps all its data in memory (RAM) instead of on disk, so reads and writes take microseconds instead
           of milliseconds. Its most common job is acting as a <strong>cache</strong>: a small, fast copy of your
           hottest data that sits in front of a larger, slower database. But Redis isn&rsquo;t just a key → string
-          cache — every key holds one of several rich data structures (see <strong>Data Types</strong> below), which
+          cache — every key holds one of several rich data structures (see <strong>Data Types</strong>{" "}below), which
           is why it also shows up as a queue, a leaderboard, a session store, and more.
         </p>
       </Section>
@@ -198,7 +198,7 @@ BITCOUNT active:2026-11-04        # how many users were active today`}</Code>
 
         <h3 className="mt-5 text-base font-semibold text-slate-100">HyperLogLog</h3>
         <p>
-          A probabilistic structure that estimates how many <em>unique</em> items you&rsquo;ve seen, using a fixed
+          A probabilistic structure that estimates how many <em>unique</em>{" "}items you&rsquo;ve seen, using a fixed
           ~12KB of memory no matter how many items you add — in exchange for a small, documented margin of error
           (Redis states about 0.81% standard error).
         </p>
@@ -221,7 +221,7 @@ GEOSEARCH drivers FROMLONLAT -122.41 37.78 BYRADIUS 5 km ASC`}</Code>
         <h3 className="mt-5 text-base font-semibold text-slate-100">Stream</h3>
         <p>
           An append-only log of entries, each with an auto-generated ID — closer to Kafka than to a List. Multiple{" "}
-          <strong>consumer groups</strong> can read the same stream independently, each tracking its own position,
+          <strong>consumer groups</strong>{" "}can read the same stream independently, each tracking its own position,
           with acknowledgement so a crashed consumer&rsquo;s unprocessed entries can be retried.
         </p>
         <Code>{`XADD orders * orderId 1042 status "created"
@@ -234,8 +234,8 @@ XREADGROUP GROUP pickers worker-1 COUNT 1 STREAMS orders ">"`}</Code>
         </p>
 
         <p className="mt-5">
-          <strong>Pub/Sub</strong> is a related but separate feature, not a stored data type —{" "}
-          <code>PUBLISH</code>/<code>SUBSCRIBE</code> deliver a message to whoever is listening right now, with
+          <strong>Pub/Sub</strong>{" "}is a related but separate feature, not a stored data type —{" "}
+          <code>PUBLISH</code>/<code>SUBSCRIBE</code>{" "}deliver a message to whoever is listening right now, with
           nothing stored and nothing to replay. Reach for a Stream instead of Pub/Sub whenever a subscriber might be
           offline when the message is sent, or you need history.
         </p>
@@ -243,29 +243,29 @@ XREADGROUP GROUP pickers worker-1 COUNT 1 STREAMS orders ">"`}</Code>
 
       <Section id="simulation" title="5. Interactive Simulation">
         <p>
-          Press <strong>Play</strong> to start traffic flowing (drag <strong>Traffic</strong> to change the request
-          rate). Then click the <strong>Redis</strong> box in the diagram to open the <strong>Inspector</strong> on
-          the right — its <strong>Hit ratio</strong> slider is the one that matters here: it controls what share of
+          Press <strong>Play</strong>{" "}to start traffic flowing (drag <strong>Traffic</strong>{" "}to change the request
+          rate). Then click the <strong>Redis</strong>{" "}box in the diagram to open the <strong>Inspector</strong>{" "}on
+          the right — its <strong>Hit ratio</strong>{" "}slider is the one that matters here: it controls what share of
           reads this simulated cache answers itself versus passing through to the <strong>Database</strong>. Drag it
-          down and watch <strong>p50/p95/p99</strong> climb and the Database&rsquo;s utilisation rise, exactly like a
+          down and watch <strong>p50/p95/p99</strong>{" "}climb and the Database&rsquo;s utilisation rise, exactly like a
           real cache losing effectiveness.
         </p>
         <p>
-          With the Redis node still selected, try the <strong>Chaos</strong> buttons: <strong>Kill</strong> simulates
-          the cache going down completely. In this simulator a dead node <em>rejects</em> every request that reaches
-          it (you&rsquo;ll see <strong>Errors</strong> jump), rather than quietly falling back to the database — a
+          With the Redis node still selected, try the <strong>Chaos</strong>{" "}buttons: <strong>Kill</strong>{" "}simulates
+          the cache going down completely. In this simulator a dead node <em>rejects</em>{" "}every request that reaches
+          it (you&rsquo;ll see <strong>Errors</strong>{" "}jump), rather than quietly falling back to the database — a
           reminder that a cache with no fallback logic in front of it is a single point of failure, not a safety net.{" "}
-          <strong>Recover</strong> brings it back; <strong>Slow</strong>, <strong>Partition</strong>, and{" "}
-          <strong>Flaky</strong> model other ways a dependency can misbehave.
+          <strong>Recover</strong>{" "}brings it back; <strong>Slow</strong>, <strong>Partition</strong>, and{" "}
+          <strong>Flaky</strong>{" "}model other ways a dependency can misbehave.
         </p>
         <TechSimulator tech="redis" />
 
         <h3 className="mt-6 text-base font-semibold text-slate-100">Internals: eviction policies</h3>
         <p>
           When the cache hits its memory limit, adding a new key means evicting an existing one. Fill the cache, then
-          read a fresh key and watch which one gets evicted under <strong>LRU</strong> (evicts whichever key hasn&rsquo;t
-          been used in the longest time), <strong>LFU</strong> (evicts whichever key has been used the fewest times),
-          or <strong>random</strong> (no bookkeeping — just picks one).
+          read a fresh key and watch which one gets evicted under <strong>LRU</strong>{" "}(evicts whichever key hasn&rsquo;t
+          been used in the longest time), <strong>LFU</strong>{" "}(evicts whichever key has been used the fewest times),
+          or <strong>random</strong>{" "}(no bookkeeping — just picks one).
         </p>
         <RedisEvictionViz />
       </Section>
@@ -283,15 +283,15 @@ XREADGROUP GROUP pickers worker-1 COUNT 1 STREAMS orders ">"`}</Code>
         <p>
           A read works like this: <code>GET key</code> → a hit returns in about a millisecond; a miss triggers a
           database query (around 50ms in this simulation), then a write-back into the cache, then the response to the
-          caller. Because the value is now cached, the <em>next</em> request for that same key is a hit — this is how
+          caller. Because the value is now cached, the <em>next</em>{" "}request for that same key is a hit — this is how
           a cold cache &ldquo;warms up&rdquo; over time.
         </p>
       </Section>
 
       <Section id="hit-miss" title="8. Cache Hits &amp; Misses">
         <p>
-          Every read against a cache ends in exactly one of two outcomes: a <strong>hit</strong> (the key was found,
-          so Redis answers directly, in roughly a millisecond) or a <strong>miss</strong> (the key wasn&rsquo;t
+          Every read against a cache ends in exactly one of two outcomes: a <strong>hit</strong>{" "}(the key was found,
+          so Redis answers directly, in roughly a millisecond) or a <strong>miss</strong>{" "}(the key wasn&rsquo;t
           there, so the caller has to go fetch it from the real source — typically the database — which is many
           times slower, as in Request Lifecycle above).
         </p>
@@ -301,7 +301,7 @@ XREADGROUP GROUP pickers worker-1 COUNT 1 STREAMS orders ">"`}</Code>
           The single most important cache number: <code>hit ratio = hits / (hits + misses)</code>. A 90% hit ratio
           means 9 out of 10 reads are fast; the other 1 pays the full miss penalty. Because the miss path is so much
           slower than the hit path, even a modest drop in hit ratio (say 95% → 85%) can more than double your
-          average latency — which is exactly what <strong>effective latency</strong> measures in the Metrics section
+          average latency — which is exactly what <strong>effective latency</strong>{" "}measures in the Metrics section
           below.
         </p>
 
@@ -340,7 +340,7 @@ XREADGROUP GROUP pickers worker-1 COUNT 1 STREAMS orders ">"`}</Code>
         <p>
           One thread runs your commands, one at a time — nothing ever runs in parallel against the same data, so
           there&rsquo;s no locking between commands. Redis makes up for not spreading work across cores by using{" "}
-          <strong>I/O multiplexing</strong> (<code>epoll</code> on Linux, <code>kqueue</code> on macOS/BSD): one
+          <strong>I/O multiplexing</strong>{" "}(<code>epoll</code>{" "}on Linux, <code>kqueue</code>{" "}on macOS/BSD): one
           thread can watch thousands of client connections at once and process whichever ones have data ready,
           without the overhead of a thread per connection. Since most Redis operations are O(1) or O(log N) on
           already-in-memory data, a single core is enough to handle hundreds of thousands of operations per second.
@@ -353,7 +353,7 @@ XREADGROUP GROUP pickers worker-1 COUNT 1 STREAMS orders ">"`}</Code>
           Each data type is backed by a structure chosen for how it&rsquo;s actually accessed: small Lists and Hashes
           use a compact encoding and are only promoted to a full linked list or hash table once they grow past a size
           threshold; a Sorted Set is really a hash table (for O(1) &ldquo;what&rsquo;s this member&rsquo;s
-          score&rdquo;) paired with a <strong>skip list</strong> (for fast ordered range scans) under the same key.
+          score&rdquo;) paired with a <strong>skip list</strong>{" "}(for fast ordered range scans) under the same key.
         </p>
 
         <h3 className="mt-5 text-base font-semibold text-slate-100">Persistence — &ldquo;in-memory&rdquo; doesn&rsquo;t have to mean &ldquo;disposable&rdquo;</h3>
@@ -367,9 +367,9 @@ XREADGROUP GROUP pickers worker-1 COUNT 1 STREAMS orders ">"`}</Code>
           </li>
           <li>
             <strong>AOF (Append-Only File)</strong> — every write command is appended to a log and replayed in order
-            on restart. The <code>appendfsync</code> setting trades durability for speed: <code>always</code> (fsync
-            every write — slowest, safest), <code>everysec</code> (the common default — loses at most about a
-            second of writes), or <code>no</code> (fastest — the OS decides when to flush).
+            on restart. The <code>appendfsync</code>{" "}setting trades durability for speed: <code>always</code>{" "}(fsync
+            every write — slowest, safest), <code>everysec</code>{" "}(the common default — loses at most about a
+            second of writes), or <code>no</code>{" "}(fastest — the OS decides when to flush).
           </li>
           <li>You can run both together: Redis loads the RDB snapshot first, then replays the AOF entries written since — a faster restart than AOF alone, with less potential data loss than RDB alone.</li>
           <li>Turn both off, and Redis is purely in-memory: fastest possible, but a crash or restart loses everything.</li>
@@ -379,8 +379,8 @@ XREADGROUP GROUP pickers worker-1 COUNT 1 STREAMS orders ">"`}</Code>
         <p>
           A Redis replica keeps an asynchronous copy of a leader&rsquo;s data (see{" "}
           <Link href="/concepts/replication" className="text-sky-400 hover:text-sky-300">Replication</Link>).{" "}
-          <strong>Redis Sentinel</strong> watches a leader/replica pair and promotes a replica automatically if the
-          leader disappears. <strong>Redis Cluster</strong> combines that with the hash-slot sharding described below,
+          <strong>Redis Sentinel</strong>{" "}watches a leader/replica pair and promotes a replica automatically if the
+          leader disappears. <strong>Redis Cluster</strong>{" "}combines that with the hash-slot sharding described below,
           so capacity and availability scale together.
         </p>
       </Section>
@@ -397,16 +397,16 @@ XREADGROUP GROUP pickers worker-1 COUNT 1 STREAMS orders ">"`}</Code>
 
       <Section id="failure" title="11. Failure Scenarios">
         <p>
-          Select the Redis node and click <strong>Kill</strong> in the Inspector&rsquo;s Chaos panel: every request
+          Select the Redis node and click <strong>Kill</strong>{" "}in the Inspector&rsquo;s Chaos panel: every request
           that reaches it is now dropped as an error, because this simulator models a dead dependency as a hard
           failure rather than a smart client that catches the error and queries the database directly — in a real
-          cache-aside app, that fallback is something <em>you</em> have to write. <strong>Partition</strong> and{" "}
-          <strong>Flaky</strong> show different failure shapes (total loss vs. intermittent failures) worth comparing
+          cache-aside app, that fallback is something <em>you</em>{" "}have to write. <strong>Partition</strong>{" "}and{" "}
+          <strong>Flaky</strong>{" "}show different failure shapes (total loss vs. intermittent failures) worth comparing
           against a clean <strong>Kill</strong>.
         </p>
         <p>
           For the real-world &ldquo;empty cache, sudden stampede&rdquo; scenario, use the <strong>eviction demo
-          above</strong> instead: fill it with keys, hit <strong>Reset</strong> to simulate a flush, and every
+          above</strong>{" "}instead: fill it with keys, hit <strong>Reset</strong>{" "}to simulate a flush, and every
           subsequent access starts out as a miss — which is exactly why production systems lean on request
           coalescing (letting only one request fetch a given key while others wait for its result) and staggered
           TTLs, so keys don&rsquo;t all expire at the same moment.
@@ -415,8 +415,8 @@ XREADGROUP GROUP pickers worker-1 COUNT 1 STREAMS orders ">"`}</Code>
 
       <Section id="metrics" title="12. Metrics">
         <p>
-          <strong>Hit ratio</strong> is the headline number — everything else follows from it.{" "}
-          <strong>Effective latency</strong> is a weighted blend of the fast hit path and the slow miss path, so even
+          <strong>Hit ratio</strong>{" "}is the headline number — everything else follows from it.{" "}
+          <strong>Effective latency</strong>{" "}is a weighted blend of the fast hit path and the slow miss path, so even
           a small drop in hit ratio can cause a surprisingly large jump in latency. <strong>Database load</strong>{" "}
           is simply the miss rate — the cache&rsquo;s entire job is to keep that number small.
         </p>
@@ -489,7 +489,7 @@ maxmemory 4gb
 maxmemory-policy allkeys-lru`}</Code>
         <p>
           Also ideal for sessions (Hash), rate limiting (<code>INCR</code> + <code>EXPIRE</code>), and leaderboards
-          (Sorted Set) — see <strong>Data Types</strong> above for the commands behind each.
+          (Sorted Set) — see <strong>Data Types</strong>{" "}above for the commands behind each.
         </p>
       </Section>
 

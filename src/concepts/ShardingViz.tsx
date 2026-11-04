@@ -123,15 +123,15 @@ export function ShardingViz() {
         {mode === "range" ? (
           workload === "recent" ? (
             <>
-              <strong className="text-red-300">Hot shard!</strong> Range sharding keeps keys ordered, but sequential keys
-              (auto-increment ids, timestamps) all fall into the <em>last</em> range — one shard takes every recent write
+              <strong className="text-red-300">Hot shard!</strong>{" "}Range sharding keeps keys ordered, but sequential keys
+              (auto-increment ids, timestamps) all fall into the <em>last</em>{" "}range — one shard takes every recent write
               while the others sit idle. Great for range scans, bad for write-heavy sequential keys.
             </>
           ) : (
-            <>Range sharding assigns each shard a contiguous slice of the keyspace — so <code>WHERE id BETWEEN …</code> hits few shards. The risk: uneven or sequential keys overload one shard. Switch the workload to &ldquo;sequential&rdquo; to see it.</>
+            <>Range sharding assigns each shard a contiguous slice of the keyspace — so <code>WHERE id BETWEEN …</code>{" "}hits few shards. The risk: uneven or sequential keys overload one shard. Switch the workload to &ldquo;sequential&rdquo; to see it.</>
           )
         ) : (
-          <>Hash sharding scatters keys with <code>hash(key) % N</code>, so load stays even for any workload (try &ldquo;sequential&rdquo; — still balanced). The cost: no range scans, and <strong className="text-amber-300">adding a shard remaps almost every key</strong> (watch &ldquo;moved on last reshard&rdquo; jump). That mass reshuffle is exactly what <a className="text-sky-400 hover:text-sky-300" href="/concepts/consistent-hashing">consistent hashing</a> solves.</>
+          <>Hash sharding scatters keys with <code>hash(key) % N</code>, so load stays even for any workload (try &ldquo;sequential&rdquo; — still balanced). The cost: no range scans, and <strong className="text-amber-300">adding a shard remaps almost every key</strong>{" "}(watch &ldquo;moved on last reshard&rdquo; jump). That mass reshuffle is exactly what <a className="text-sky-400 hover:text-sky-300" href="/concepts/consistent-hashing">consistent hashing</a> solves.</>
         )}
       </p>
       <GuidedTour tourId="sharding" steps={TOUR} autoStart={false} />

@@ -41,7 +41,7 @@ export default function TwoPhaseCommitPage() {
       <Section title="Definition">
         <p>
           2PC gets multiple participants to commit a single transaction together — either all of them commit, or
-          none do. A <strong>coordinator</strong> runs two rounds:
+          none do. A <strong>coordinator</strong>{" "}runs two rounds:
         </p>
         <ol className="list-decimal space-y-1 pl-5">
           <li>
@@ -66,8 +66,8 @@ export default function TwoPhaseCommitPage() {
 
       <Section title="Try it">
         <p>
-          Click <strong>All commit</strong> for the happy path. Click <strong>One aborts</strong> to see a single NO
-          vote roll everything back. Click <strong>Coordinator crash</strong> to see participants stuck waiting —
+          Click <strong>All commit</strong>{" "}for the happy path. Click <strong>One aborts</strong>{" "}to see a single NO
+          vote roll everything back. Click <strong>Coordinator crash</strong>{" "}to see participants stuck waiting —
           they&rsquo;ve already said YES and locked their data, but with no coordinator left to tell them commit or
           abort, they can&rsquo;t safely do either. That stuck state is 2PC&rsquo;s biggest weakness, known as{" "}
           <strong>blocking</strong>.
@@ -77,7 +77,7 @@ export default function TwoPhaseCommitPage() {
 
       <Section title="Analogy">
         <p>
-          A wedding officiant asks each partner &ldquo;do you?&rdquo; (prepare). Only if <em>both</em> say yes does
+          A wedding officiant asks each partner &ldquo;do you?&rdquo; (prepare). Only if <em>both</em>{" "}say yes does
           the officiant pronounce them married (commit). If the officiant faints right after the vows but before
           pronouncing, everyone is stuck waiting — nobody can finish the ceremony alone.
         </p>
@@ -113,7 +113,7 @@ export default function TwoPhaseCommitPage() {
         <ul className="list-disc space-y-1 pl-5">
           <li>Reaching for 2PC across microservices by default — at scale, the blocking and tight coupling usually make a saga the better fit.</li>
           <li>Skipping the durable &ldquo;prepared&rdquo; record — without it, a participant that restarts can&rsquo;t honour whatever the coordinator decided.</li>
-          <li>Assuming 2PC handles a network partition gracefully — a partition during Phase 2 <em>is</em> the stuck, blocking scenario above.</li>
+          <li>Assuming 2PC handles a network partition gracefully — a partition during Phase 2 <em>is</em>{" "}the stuck, blocking scenario above.</li>
         </ul>
       </Section>
 

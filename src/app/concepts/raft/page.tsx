@@ -44,7 +44,7 @@ export default function RaftPage() {
           of them crash or lose network access — is called <strong>consensus</strong>.
         </p>
         <p>
-          Raft solves consensus by electing one <strong>leader</strong> at a time. The leader decides the order
+          Raft solves consensus by electing one <strong>leader</strong>{" "}at a time. The leader decides the order
           events happen in; everyone else just copies what it says. Having a single leader in charge is what makes
           Raft much easier to reason about than approaches where every server negotiates as equals.
         </p>
@@ -52,11 +52,11 @@ export default function RaftPage() {
 
       <Section title="Try it">
         <p>
-          Five servers start up with S0 as leader. Click the leader to <strong>crash</strong> it. A follower will
+          Five servers start up with S0 as leader. Click the leader to <strong>crash</strong>{" "}it. A follower will
           notice the silence, declare itself a <strong>candidate</strong>, and ask the others to vote for it. If it
-          gets a majority of votes, it becomes the new leader for a new <strong>term</strong> (a counter that goes up
+          gets a majority of votes, it becomes the new leader for a new <strong>term</strong>{" "}(a counter that goes up
           by one every election). Add entries and watch each one turn from amber (not yet safe) to green once a{" "}
-          <strong>majority</strong> of servers have stored a copy. Crash too many servers and nothing can be
+          <strong>majority</strong>{" "}of servers have stored a copy. Crash too many servers and nothing can be
           confirmed anymore — there aren&rsquo;t enough left to form a majority.
         </p>
         <RaftViz />
@@ -65,12 +65,12 @@ export default function RaftPage() {
       <Section title="Leader election">
         <p>
           Every server runs a timer called the <strong>election timeout</strong>. While there&rsquo;s a working
-          leader, it keeps sending small <em>heartbeat</em> messages that reset everyone&rsquo;s timer.
+          leader, it keeps sending small <em>heartbeat</em>{" "}messages that reset everyone&rsquo;s timer.
         </p>
         <p>
           If a server&rsquo;s timer runs out — meaning it hasn&rsquo;t heard from a leader in a while — it assumes
           the leader is gone and does three things: turns itself into a <strong>candidate</strong>, bumps the{" "}
-          <strong>term</strong> number up by one, votes for itself, then asks every other server for its vote.
+          <strong>term</strong>{" "}number up by one, votes for itself, then asks every other server for its vote.
         </p>
         <p>
           Each server gives out only one vote per term, and only to a candidate whose log is at least as up to date
@@ -85,7 +85,7 @@ export default function RaftPage() {
           that entry out to every follower.
         </p>
         <p>
-          An entry becomes <strong>committed</strong> once a majority of servers have stored it — at that point
+          An entry becomes <strong>committed</strong>{" "}once a majority of servers have stored it — at that point
           it&rsquo;s permanent and will survive even if the leader crashes immediately after. Only then does the
           leader apply it and tell followers to do the same.
         </p>
@@ -103,7 +103,7 @@ export default function RaftPage() {
           never quietly disappear.
         </p>
         <p>
-          That overlap guarantee holds for a cluster of <em>any</em> size — it isn&rsquo;t special to odd numbers.
+          That overlap guarantee holds for a cluster of <em>any</em>{" "}size — it isn&rsquo;t special to odd numbers.
           Clusters are usually sized as odd numbers (3, 5, 7) purely for efficiency: a 4-server cluster still only
           tolerates 1 failure, exactly like a 3-server cluster, so the 4th server buys you nothing.
         </p>
@@ -129,7 +129,7 @@ export default function RaftPage() {
 
       <Section title="Where it&rsquo;s used">
         <p>
-          Raft runs underneath <strong>etcd</strong> (which stores Kubernetes&rsquo; cluster state), HashiCorp{" "}
+          Raft runs underneath <strong>etcd</strong>{" "}(which stores Kubernetes&rsquo; cluster state), HashiCorp{" "}
           <strong>Consul</strong>, <strong>CockroachDB</strong>, and plenty of other systems that need several
           servers to agree on one source of truth.
         </p>
@@ -156,7 +156,7 @@ export default function RaftPage() {
         <ul className="list-disc space-y-1 pl-5">
           <li>Running an even number of servers — it costs you a server without buying extra fault tolerance.</li>
           <li>Assuming the cluster can accept writes as long as most servers are reachable <em>from the client</em> — what matters is whether those servers can reach a majority of <em>each other</em>.</li>
-          <li>Confusing Raft (leader election plus majority-committed log) with plain leader-follower replication, which has no election or quorum — see <Link href="/concepts/replication" className="text-sky-400 hover:text-sky-300">Replication</Link> for that simpler case.</li>
+          <li>Confusing Raft (leader election plus majority-committed log) with plain leader-follower replication, which has no election or quorum — see <Link href="/concepts/replication" className="text-sky-400 hover:text-sky-300">Replication</Link>{" "}for that simpler case.</li>
         </ul>
       </Section>
 

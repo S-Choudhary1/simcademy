@@ -42,7 +42,7 @@ export default function SagaPage() {
         <p>
           A saga breaks one business transaction that spans multiple services into a sequence of smaller{" "}
           <strong>local transactions</strong> — one per service, each committed on its own. If a later step fails,
-          the saga runs a <strong>compensating transaction</strong> for every step that already succeeded, in reverse
+          the saga runs a <strong>compensating transaction</strong>{" "}for every step that already succeeded, in reverse
           order, to undo their effects.
         </p>
       </Section>
@@ -50,9 +50,9 @@ export default function SagaPage() {
       <Section title="The problem it solves">
         <p>
           You can&rsquo;t wrap one{" "}
-          <Link href="/concepts/acid" className="text-sky-400 hover:text-sky-300">ACID</Link> transaction around
+          <Link href="/concepts/acid" className="text-sky-400 hover:text-sky-300">ACID</Link>{" "}transaction around
           several separate services and databases — there&rsquo;s no single shared commit button that covers all of
-          them. A saga gets you atomicity of the <em>end result</em> instead: either everything happens, or
+          them. A saga gets you atomicity of the <em>end result</em>{" "}instead: either everything happens, or
           everything gets undone — without needing a distributed lock across services.
         </p>
       </Section>

@@ -345,7 +345,7 @@ export function KafkaInternalsViz() {
       ) : null}
 
       <p className="mt-2 text-[11px] leading-snug text-slate-500">
-        Try it: <strong className="text-slate-400">+ Consumer</strong> in a group up to the partition count to cut its lag; one more and it sits idle (partitions cap parallelism). <strong className="text-slate-400">+ Group</strong> to see a second group read the same records at its own offset. <strong className="text-slate-400">+ Partition</strong> to add capacity; <strong className="text-slate-400">− Partition</strong> to see why Kafka won&rsquo;t shrink a topic in place.
+        Try it: <strong className="text-slate-400">+ Consumer</strong>{" "}in a group up to the partition count to cut its lag; one more and it sits idle (partitions cap parallelism). <strong className="text-slate-400">+ Group</strong>{" "}to see a second group read the same records at its own offset. <strong className="text-slate-400">+ Partition</strong>{" "}to add capacity; <strong className="text-slate-400">− Partition</strong>{" "}to see why Kafka won&rsquo;t shrink a topic in place.
       </p>
       <GuidedTour tourId="kafka-internals" steps={TOUR} autoStart={false} />
     </div>

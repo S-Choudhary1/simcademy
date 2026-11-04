@@ -38,7 +38,7 @@ export default function PostgresVsMongoPage() {
         <A href="/technologies/postgresql">PostgreSQL</A> is <strong>relational</strong>: tables, SQL, foreign keys, and
         full <A href="/concepts/acid">ACID</A> transactions, scaling reads with <A href="/concepts/replication">read
         replicas</A> behind a single server that handles all writes. <A href="/technologies/mongodb">MongoDB</A> is a{" "}
-        <strong>document</strong> store that <A href="/concepts/sharding">shards</A> — splits data across multiple
+        <strong>document</strong>{" "}store that <A href="/concepts/sharding">shards</A> — splits data across multiple
         servers by key — to scale writes horizontally. Model your data first — its shape decides the winner more than
         any benchmark.
       </Callout>
@@ -46,7 +46,7 @@ export default function PostgresVsMongoPage() {
       <H2 id="simulation">See them run</H2>
       <P>
         The same traffic drives both scaled-out setups: Postgres spreads reads across replicas behind a read router;
-        MongoDB spreads load across shards behind <code>mongos</code> (MongoDB&rsquo;s built-in router that sends each
+        MongoDB spreads load across shards behind <code>mongos</code>{" "}(MongoDB&rsquo;s built-in router that sends each
         request to the right shard). Raise the traffic and watch the load distribute.
       </P>
       <Figure wide caption="Postgres scaling reads across replicas (left) vs MongoDB spreading load across shards (right).">
@@ -60,7 +60,7 @@ export default function PostgresVsMongoPage() {
       <P>
         Postgres shines on <strong>relationships and complex queries</strong> — joins, foreign keys, and a{" "}
         <A href="/concepts/query-planning">query planner</A> that optimizes whatever you ask. Mongo shines when data is{" "}
-        <strong>pre-shaped as one document</strong> so a read is a single fetch with no join — but denormalized data must
+        <strong>pre-shaped as one document</strong>{" "}so a read is a single fetch with no join — but denormalized data must
         be kept in sync on every write, and a new query you didn&rsquo;t design for can be expensive. Both index with{" "}
         <A href="/concepts/postgresql-indexing">B⁺-trees</A> under the hood.
       </P>
@@ -69,11 +69,11 @@ export default function PostgresVsMongoPage() {
 
       <H2 id="scaling">The sharpest difference: scaling writes</H2>
       <P>
-        Postgres scales <strong>reads</strong> with replicas, but the <strong>write</strong> path stays one server
+        Postgres scales <strong>reads</strong>{" "}with replicas, but the <strong>write</strong>{" "}path stays one server
         until you add a sharding extension (like Citus) or partition the data yourself. MongoDB ships sharding
-        built in, so writes scale <strong>horizontally</strong> across many servers — at the price of choosing a good{" "}
-        <strong>shard key</strong> (the field used to decide which server stores which data). Pick it badly and one{" "}
-        <strong>hot shard</strong> ends up overloaded while the rest sit idle, recreating the single-server bottleneck
+        built in, so writes scale <strong>horizontally</strong>{" "}across many servers — at the price of choosing a good{" "}
+        <strong>shard key</strong>{" "}(the field used to decide which server stores which data). Pick it badly and one{" "}
+        <strong>hot shard</strong>{" "}ends up overloaded while the rest sit idle, recreating the single-server bottleneck
         you were trying to escape.
       </P>
 
