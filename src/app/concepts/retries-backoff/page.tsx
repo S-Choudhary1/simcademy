@@ -36,32 +36,82 @@ export default function RetriesBackoffPage() {
         </p>
       </header>
 
-      <Section title="The thundering herd">
+      <Section title="Definition">
         <p>
-          When a service hiccups, every client fails at once — and if they all retry on the same schedule, they hit the
-          recovering service in a synchronized <strong>spike</strong> that knocks it back down. This is the{" "}
-          <strong>thundering herd</strong> (or retry storm). The fix is to make retries both <em>patient</em> and{" "}
-          <em>desynchronized</em>.
+          A <strong>retry</strong> is just sending a failed request again. Two choices turn a retry from dangerous into
+          safe: <strong>backoff</strong> (how long to wait before trying again — usually longer each time) and{" "}
+          <strong>jitter</strong> (adding randomness to that wait so many clients don&rsquo;t all retry at the exact
+          same moment).
+        </p>
+      </Section>
+
+      <Section title="The problem it solves">
+        <p>
+          When a service hiccups, every client calling it tends to fail at the same instant. If they all retry on the
+          same fixed schedule, they hit the recovering service in one synchronized <strong>spike</strong> that knocks
+          it back down — right as it was starting to recover. This is called a <strong>thundering herd</strong> (or
+          retry storm). The fix is to make retries both <em>patient</em> (wait longer each time) and{" "}
+          <em>desynchronized</em> (don&rsquo;t let everyone wait the exact same amount of time).
         </p>
       </Section>
 
       <Section title="Try it">
         <p>
-          Five clients fail at the same instant. Switch between strategies and watch two things: the{" "}
-          <strong>timeline</strong> (when each client retries) and the <strong>load histogram</strong> (how many retries
-          hit each second). Naive strategies produce tall synchronized bars; <strong>exponential backoff + jitter</strong>{" "}
-          flattens them.
+          Five clients all fail at the same instant. Switch between strategies and watch two things: the{" "}
+          <strong>timeline</strong> (when each client retries) and the <strong>load histogram</strong> (how many
+          retries hit the service each second). Naive strategies produce tall synchronized bars — the thundering herd
+          in action. <strong>Exponential backoff + jitter</strong> flattens them into a steady trickle.
         </p>
         <RetryBackoffViz />
       </Section>
 
-      <Section title="The rules of good retries">
+      <Section title="Analogy">
+        <p>
+          A restaurant reopens right after a small kitchen fire. If every customer who was waiting outside walks back
+          in at the exact same minute the doors open, the kitchen gets slammed all over again before it&rsquo;s ready.
+          If the same customers trickle back in over the next 20 minutes at random times, the kitchen serves the exact
+          same number of people — just without the crush at the door.
+        </p>
+      </Section>
+
+      <Section title="Where it&rsquo;s used">
+        <p>
+          Almost anywhere one system calls another over a network: HTTP clients retrying a failed API call, a message
+          queue redelivering a message its consumer failed to process, a mobile app retrying after a dropped
+          connection. Most cloud SDKs (AWS, GCP, Azure) now build exponential backoff with jitter in by default,
+          because so many early outages were made worse by naive retry logic.
+        </p>
+      </Section>
+
+      <Section title="How to implement">
         <ul className="list-disc space-y-1 pl-5">
-          <li><strong>Exponential backoff</strong> — double the wait each attempt so a struggling service gets breathing room.</li>
-          <li><strong>Jitter</strong> — randomize each delay so clients don&rsquo;t retry in lock-step. AWS&rsquo;s recommendation is &ldquo;full jitter&rdquo;: <code>sleep = random(0, base · 2^attempt)</code>.</li>
-          <li><strong>Cap attempts &amp; total time</strong> — give up eventually; infinite retries just move the outage.</li>
-          <li><strong>Only retry idempotent / retriable errors</strong> — never blindly retry a non-idempotent write, and never retry a 4xx.</li>
-          <li>Pair retries with a <Link href="/concepts/circuit-breaker" className="text-sky-400 hover:text-sky-300">circuit breaker</Link> so you stop hammering a dependency that&rsquo;s clearly down.</li>
+          <li><strong>Exponential backoff</strong> — roughly double the wait each attempt (1s, 2s, 4s, 8s&hellip;) so a struggling service gets breathing room instead of being hit at a constant rate.</li>
+          <li>
+            <strong>Jitter</strong> — randomize each delay so clients don&rsquo;t retry in lock-step. AWS&rsquo;s
+            &ldquo;full jitter&rdquo; recommendation is{" "}
+            <code>sleep = random(0, min(cap, base · 2^attempt))</code> — a <code>cap</code> keeps the maximum wait from
+            growing forever as attempts pile up.
+          </li>
+          <li><strong>Cap attempts &amp; total time</strong> — give up eventually; retrying forever just moves the outage from the service to every one of its callers.</li>
+          <li><strong>Only retry idempotent / retriable errors</strong> — never blindly retry a non-idempotent write (see <Link href="/concepts/idempotency" className="text-sky-400 hover:text-sky-300">Idempotency</Link>), and never retry a 4xx — the same bad request will fail the exact same way every time.</li>
+          <li>Pair retries with a <Link href="/concepts/circuit-breaker" className="text-sky-400 hover:text-sky-300">circuit breaker</Link> so you stop hammering a dependency that&rsquo;s clearly down instead of retrying into the void.</li>
+        </ul>
+      </Section>
+
+      <Section title="Trade-offs">
+        <ul className="list-disc space-y-1 pl-5">
+          <li>Retries trade latency for reliability — a caller that eventually succeeds after 3 retries waited much longer than one that failed fast, so retries should have a sensible ceiling.</li>
+          <li>Jitter smooths load, it doesn&rsquo;t eliminate it — if a dependency is down for a real, structural reason (not a brief blip), enough clients retrying will still add meaningful load even when spread out.</li>
+          <li>Retrying only helps for transient failures. A retry budget (capping what fraction of traffic may be retries) protects the caller&rsquo;s own capacity when failures aren&rsquo;t transient.</li>
+        </ul>
+      </Section>
+
+      <Section title="Common mistakes">
+        <ul className="list-disc space-y-1 pl-5">
+          <li>Retrying a non-idempotent operation (like &ldquo;charge the card&rdquo;) without an idempotency key — a retried request can trigger the side effect twice.</li>
+          <li>Retrying 4xx client errors — a malformed request or bad auth token will fail again no matter how many times you resend it.</li>
+          <li>Exponential backoff with no jitter — attempts still land on a shared schedule, so the thundering herd survives even though the average wait went up.</li>
+          <li>No cap on attempts or total elapsed time, so a single slow dependency can make a request hang indefinitely.</li>
         </ul>
       </Section>
 
